@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  server:
+    name: Server (lint + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      # Évite de retélécharger le binaire MongoDB de mongodb-memory-server à chaque exécution.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+  client:
+    name: Client (build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run build

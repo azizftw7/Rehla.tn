@@ -2,10 +2,12 @@ import { Router } from 'express';
 import mongoose from 'mongoose';
 import { authLimiter } from '../middlewares/rateLimit.js';
 import authRoutes from './auth.routes.js';
+import usersRoutes from './users.routes.js';
 
 const router = Router();
 
 router.use('/auth', authLimiter, authRoutes);
+router.use('/users', usersRoutes);
 
 router.get('/health', (_req, res) => {
   const connected = mongoose.connection.readyState === 1;

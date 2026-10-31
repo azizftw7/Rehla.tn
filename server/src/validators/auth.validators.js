@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TRAVELER_PROFILES } from '../models/index.js';
+import { SERVICE_TYPES, TRAVELER_PROFILES } from '../models/index.js';
 
 const requiredString = (requiredMessage) =>
   z.string({
@@ -28,13 +28,54 @@ export const profileField = z.enum(TRAVELER_PROFILES, {
       : 'Profil invalide : choisissez etudiant, resident ou touriste.',
 });
 
-// Les champs non prévus (status, provider…) sont ignorés : on ne peut pas s'inscrire comme admin.
-export const registerSchema = z.object({
-  name: nameField,
-  email: emailField,
-  password: passwordField,
-  role: z
-    .literal('voyageur', { error: 'Rôle invalide : seule l’inscription voyageur est possible.' })
-    .default('voyageur'),
+export const providerField = z
+  .object(
+    {
+      businessName: requiredString('Le nom commercial est obligatoire.')
+        .trim()
+        .min(2, 'Le nom commercial doit contenir au moins 2 caractères.')
+        .max(120, 'Le nom commercial ne peut pas dépasser 120 caractères.'),
+      activityType: z.enum(SERVICE_TYPES, {
+        error: (issue) =>
+          issue.input === undefined
+            ? "Le type d'activité est obligatoire."
+            : `Type d'activité invalide : choisissez ${SERVICE_TYPES.join(', ')}.`,
+      }),
+      city: requiredString('La ville est obligatoire.')
+        .trim()
+        .min(2, 'La ville doit contenir au moins 2 caractères.')
+        .max(80, 'La ville ne peut pas dépasser 80 caractères.'),
+      phone: requiredString('Le numéro de téléphone est obligatoire.')
+        .trim()
+        .regex(/^\+?[0-9][0-9 .-]{6,18}[0-9]$/, "Le numéro de téléphone n'est pas valide."),
+    },
+    { error: "Les informations sur l'activité doivent être un objet." },
+  )
+  // Si l'objet manque, on valide un objet vide pour lister chaque champ obligatoire.
+  .prefault({});
+
+const accountFields = { name: nameField, email: emailField, password: passwordField };
+
+const travelerRegisterSchema = z.object({
+  ...accountFields,
+  role: z.literal('voyageur'),
   profile: profileField,
 });
+
+const providerRegisterSchema = z.object({
+  ...accountFields,
+  role: z.literal('prestataire'),
+  provider: providerField,
+});
+
+// Les champs non prévus (status, profile d'un prestataire…) sont ignorés,
+// et on ne peut pas s'inscrire comme admin. Sans rôle, l'inscription est celle d'un voyageur.
+export const registerSchema = z.preprocess(
+  (body) =>
+    body && typeof body === 'object' && body.role === undefined
+      ? { ...body, role: 'voyageur' }
+      : body,
+  z.discriminatedUnion('role', [travelerRegisterSchema, providerRegisterSchema], {
+    error: 'Rôle invalide : choisissez voyageur ou prestataire.',
+  }),
+);

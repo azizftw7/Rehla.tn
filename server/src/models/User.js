@@ -70,6 +70,20 @@ const userSchema = new Schema(
   },
 );
 
+const REQUIRED_PROVIDER_FIELDS = {
+  businessName: 'Le nom commercial est obligatoire.',
+  activityType: "Le type d'activité est obligatoire.",
+  city: 'La ville est obligatoire.',
+  phone: 'Le numéro de téléphone est obligatoire.',
+};
+
+userSchema.pre('validate', function () {
+  if (this.role !== 'prestataire') return;
+  for (const [field, message] of Object.entries(REQUIRED_PROVIDER_FIELDS)) {
+    if (!this.provider?.[field]) this.invalidate(`provider.${field}`, message);
+  }
+});
+
 // La longueur minimale est vérifiée sur le mot de passe en clair, avant le hachage.
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;

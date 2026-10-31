@@ -19,7 +19,17 @@ const destinationSchema = new Schema(
     // Nom en minuscules et sans accents, pour la recherche (« ain » trouve « Aïn Draham »).
     nameNormalized: { type: String, index: true },
   },
-  { timestamps: true, toJSON: { versionKey: false } },
+  {
+    timestamps: true,
+    toJSON: {
+      versionKey: false,
+      // Champ technique de recherche : inutile pour le front.
+      transform(_doc, ret) {
+        delete ret.nameNormalized;
+        return ret;
+      },
+    },
+  },
 );
 
 destinationSchema.index({ location: '2dsphere' });

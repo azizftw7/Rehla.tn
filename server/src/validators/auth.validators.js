@@ -28,29 +28,30 @@ export const profileField = z.enum(TRAVELER_PROFILES, {
       : 'Profil invalide : choisissez etudiant, resident ou touriste.',
 });
 
+export const providerShape = {
+  businessName: requiredString('Le nom commercial est obligatoire.')
+    .trim()
+    .min(2, 'Le nom commercial doit contenir au moins 2 caractères.')
+    .max(120, 'Le nom commercial ne peut pas dépasser 120 caractères.'),
+  activityType: z.enum(SERVICE_TYPES, {
+    error: (issue) =>
+      issue.input === undefined
+        ? "Le type d'activité est obligatoire."
+        : `Type d'activité invalide : choisissez ${SERVICE_TYPES.join(', ')}.`,
+  }),
+  city: requiredString('La ville est obligatoire.')
+    .trim()
+    .min(2, 'La ville doit contenir au moins 2 caractères.')
+    .max(80, 'La ville ne peut pas dépasser 80 caractères.'),
+  phone: requiredString('Le numéro de téléphone est obligatoire.')
+    .trim()
+    .regex(/^\+?[0-9][0-9 .-]{6,18}[0-9]$/, "Le numéro de téléphone n'est pas valide."),
+};
+
+export const PROVIDER_NOT_OBJECT = "Les informations sur l'activité doivent être un objet.";
+
 export const providerField = z
-  .object(
-    {
-      businessName: requiredString('Le nom commercial est obligatoire.')
-        .trim()
-        .min(2, 'Le nom commercial doit contenir au moins 2 caractères.')
-        .max(120, 'Le nom commercial ne peut pas dépasser 120 caractères.'),
-      activityType: z.enum(SERVICE_TYPES, {
-        error: (issue) =>
-          issue.input === undefined
-            ? "Le type d'activité est obligatoire."
-            : `Type d'activité invalide : choisissez ${SERVICE_TYPES.join(', ')}.`,
-      }),
-      city: requiredString('La ville est obligatoire.')
-        .trim()
-        .min(2, 'La ville doit contenir au moins 2 caractères.')
-        .max(80, 'La ville ne peut pas dépasser 80 caractères.'),
-      phone: requiredString('Le numéro de téléphone est obligatoire.')
-        .trim()
-        .regex(/^\+?[0-9][0-9 .-]{6,18}[0-9]$/, "Le numéro de téléphone n'est pas valide."),
-    },
-    { error: "Les informations sur l'activité doivent être un objet." },
-  )
+  .object(providerShape, { error: PROVIDER_NOT_OBJECT })
   // Si l'objet manque, on valide un objet vide pour lister chaque champ obligatoire.
   .prefault({});
 

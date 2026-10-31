@@ -42,3 +42,26 @@ export async function protect(req, _res, next) {
   req.user = user;
   next();
 }
+
+const ROLE_LABELS = {
+  voyageur: 'voyageurs',
+  prestataire: 'prestataires',
+  admin: 'administrateurs',
+};
+
+/**
+ * Réserve une route aux rôles donnés (à placer après protect) : 403 sinon.
+ * Exemple : router.post('/services', protect, authorize('prestataire'), createService)
+ */
+export function authorize(...roles) {
+  const allowed = roles.map((role) => ROLE_LABELS[role] ?? role).join(' et ');
+  return (req, _res, next) => {
+    if (!req.user) {
+      throw ApiError.unauthorized('Authentification requise. Connectez-vous.');
+    }
+    if (!roles.includes(req.user.role)) {
+      throw ApiError.forbidden(`Accès réservé aux ${allowed}.`);
+    }
+    next();
+  };
+}

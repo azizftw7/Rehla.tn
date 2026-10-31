@@ -68,6 +68,15 @@ const providerRegisterSchema = z.object({
   provider: providerField,
 });
 
+// Pas de règle de longueur à la connexion : on vérifie seulement que les champs sont remplis.
+export const loginSchema = z.object({
+  email: emailField,
+  password: requiredString('Le mot de passe est obligatoire.').min(
+    1,
+    'Le mot de passe est obligatoire.',
+  ),
+});
+
 // Les champs non prévus (status, profile d'un prestataire…) sont ignorés,
 // et on ne peut pas s'inscrire comme admin. Sans rôle, l'inscription est celle d'un voyageur.
 export const registerSchema = z.preprocess(

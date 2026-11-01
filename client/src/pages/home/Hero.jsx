@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import ArchScene from '../../components/ArchScene.jsx'
 import Icon from '../../components/Icon.jsx'
 import SearchBar from '../../components/SearchBar.jsx'
@@ -7,7 +7,14 @@ import { CATEGORIES } from '../../data/categories.js'
 
 export default function Hero() {
   const navigate = useNavigate()
+  const { hash } = useLocation()
+  const searchInputRef = useRef(null)
   const [selectedTypes, setSelectedTypes] = useState([])
+
+  // « Rechercher une destination » (page 404) mène à /#recherche : on place le curseur dans le champ.
+  useEffect(() => {
+    if (hash === '#recherche') searchInputRef.current?.focus()
+  }, [hash])
 
   const toggleType = (type) =>
     setSelectedTypes((types) =>
@@ -37,7 +44,7 @@ export default function Hero() {
             trouvez des compagnons de route.
           </p>
 
-          <SearchBar size="lg" inputId="recherche" onSearch={search} />
+          <SearchBar size="lg" inputId="recherche" inputRef={searchInputRef} onSearch={search} />
 
           <div className="hero__filtres" role="group" aria-label="Filtres rapides par type">
             {CATEGORIES.map((category) => {

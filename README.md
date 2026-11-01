@@ -113,6 +113,42 @@ Au tout premier `npm test`, mongodb-memory-server télécharge un binaire MongoD
 - Listes paginées : `?page=1&limit=20` → `{ items, total, page, pages }`.
 - Coordonnées en GeoJSON `[longitude, latitude]` (Leaflet attend `[latitude, longitude]` : penser à inverser côté front).
 
+## Front-end (`client/`)
+
+React 19 + Vite, react-router-dom, icônes lucide-react. Le design (couleurs, espacements, rayons, ombres, thèmes clair et sombre) vient de `client/src/styles/tokens.css`.
+
+```powershell
+cd client
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # version de production dans client/dist
+npm run lint     # ESLint
+npm test         # Vitest + Testing Library
+```
+
+Le front appelle l'API sur `http://localhost:5000/api` par défaut. Pour une autre adresse, copier `client/.env.example` en `client/.env` et modifier `VITE_API_URL` (puis relancer `npm run dev`).
+
+## Lancer le back et le front ensemble
+
+Ouvrir **deux terminaux** PowerShell :
+
+```powershell
+# Terminal 1 — API (http://localhost:5000/api)
+cd server
+npm run seed     # la première fois, ou pour remettre les données de démo
+npm run dev
+```
+
+```powershell
+# Terminal 2 — site (http://localhost:5173)
+cd client
+npm run dev
+```
+
+Puis ouvrir http://localhost:5173. Les destinations de la section « Où partir cet automne ? » viennent de l'API : si elle n'est pas démarrée, la page affiche un message d'erreur avec un bouton « Réessayer ».
+
+`CLIENT_URL` dans `server/.env` doit valoir `http://localhost:5173` (valeur par défaut), sinon le navigateur bloque les appels (CORS).
+
 ## Intégration continue
 
-À chaque pull request, GitHub Actions lance `npm ci`, `npm run lint` et `npm test` dans `server/`, puis `npm ci` et `npm run build` dans `client/`.
+À chaque pull request, GitHub Actions lance `npm ci`, `npm run lint` et `npm test` dans `server/`, puis `npm ci`, `npm run lint`, `npm test` et `npm run build` dans `client/`.

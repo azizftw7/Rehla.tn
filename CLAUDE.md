@@ -6,8 +6,8 @@ Réponds en français.
 
 Application web (projet étudiant en Scrum, 3 sprints) pour préparer un déplacement en Tunisie. Le voyageur choisit une destination et voit sur une carte (Leaflet) les hébergements, restaurants, activités, événements, transports et guides. Favoris, avis, partage volontaire de déplacement (co-voyageurs). Les prestataires publient leurs services ; l'administrateur gère les comptes et modère. **Ni réservation ni paiement.**
 
-- `client/` : React + Vite — **ne pas modifier** (géré par un autre membre de l'équipe).
-- `server/` : back-end Node.js + Express 5 + MongoDB (Mongoose) — notre périmètre.
+- `client/` : front-end React 19 + Vite (voir « Front-end » plus bas).
+- `server/` : back-end Node.js + Express 5 + MongoDB (Mongoose).
 - `doc/` : diagrammes de cas d'utilisation et de classes par sprint (à lire avant chaque story).
 
 ## Méthode de travail
@@ -16,7 +16,7 @@ Application web (projet étudiant en Scrum, 3 sprints) pour préparer un déplac
 - Après chaque story : tests + lint, commit, résumé, puis **attendre l'accord** de l'utilisateur avant la suivante.
 - **Ne jamais pousser sur GitHub sans demande explicite.** Préparer le titre et la description de PR avec `Closes #N` (TECH-1 n'a pas d'issue : écrire « Réalise TECH-1 », sans `Closes`).
 - Chaque PR vise la branche précédente (ou `main` si elle est fusionnée) ; un partenaire relit avant fusion.
-- Ne pas commiter `client/package-lock.json` s'il a été modifié localement.
+- Pas de ligne `Co-Authored-By` dans les commits, ni de mention « Generated with Claude Code » dans les PR.
 - À la fin de chaque phase : lister les routes créées avec un exemple de requête pour chacune.
 
 ## Commandes (dans `server/`, compatibles PowerShell — aucune commande Unix dans les scripts npm)
@@ -51,3 +51,21 @@ Application web (projet étudiant en Scrum, 3 sprints) pour préparer un déplac
 
 - Chaque critère d'acceptation couvert par des tests qui passent ; lint propre.
 - Erreurs (donnée manquante, service indisponible) → message clair.
+
+## Front-end (`client/`)
+
+- React 19 + Vite, react-router-dom (`BrowserRouter` dans `main.jsx`, routes dans `App.jsx`), icônes lucide-react via le composant `Icon`.
+- Commandes (dans `client/`) : `npm run dev` (port 5173) · `npm run build` · `npm run lint` · `npm test` (Vitest + Testing Library, jsdom).
+- URL de l'API : `VITE_API_URL` (voir `client/.env.example`, défaut `http://localhost:5000/api`), appels via `src/lib/api.js`.
+- Style du code : pas de point-virgule, guillemets simples (comme le gabarit Vite).
+
+### Design (à respecter)
+
+- **Toutes** les couleurs, espacements, rayons et ombres viennent de `src/styles/tokens.css` (`var(--bleu)`, `var(--space-4)`…). Jamais de couleur en dur ; seule exception : `public/favicon.svg` (#0B5CAD). Pour une transparence : `color-mix(in srgb, var(--x) 10%, transparent)`.
+- Ne pas modifier `tokens.css` (fourni par l'équipe design). Styles de base dans `src/styles/global.css`.
+- Thème : attribut `data-theme` sur `<html>`, hook `useTheme` (choix mémorisé dans `localStorage`, clé `rehla-theme` ; thème du système par défaut) ; le script de `index.html` applique le thème avant l'affichage.
+- Polices : Alexandria (titres, `--font-display`) et Readex Pro (texte, `--font-sans`), chargées dans `index.html`.
+- Style « Sidi Bou Saïd » : classe utilitaire `.arche` (haut en demi-cercle), coins arrondis, ombres douces, survol des cartes = léger soulèvement + ombre, transitions `var(--duree-base)` (220 ms), `prefers-reduced-motion` respecté.
+- Accessibilité : contraste AA, focus visible (`var(--focus-ring)`), textes alternatifs, navigation au clavier.
+- Mobile d'abord. Les variables ne marchent pas dans les media queries : écrire 768px (= `--bp-md`) / 1024px (= `--bp-lg`) avec un commentaire.
+- Composants réutilisables dans `src/components/` (Button, NavBar, Footer, SearchBar, DestinationCard, Icon, Logo, ArchScene, Layout) ; pages dans `src/pages/`.

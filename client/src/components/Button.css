@@ -1,0 +1,90 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duree-base) var(--ease-standard),
+    border-color var(--duree-base) var(--ease-standard),
+    color var(--duree-base) var(--ease-standard),
+    box-shadow var(--duree-base) var(--ease-standard),
+    transform var(--duree-base) var(--ease-standard);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Tailles (hauteur ≥ 40px pour le tactile) */
+.btn--sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: 14px;
+}
+
+.btn--md {
+  padding: var(--space-3) var(--space-5);
+  font-size: 15px;
+}
+
+.btn--lg {
+  padding: var(--space-4) var(--space-6);
+  font-size: 17px;
+}
+
+/* Variantes */
+.btn--primary {
+  background: var(--bleu);
+  color: var(--on-bleu);
+}
+
+.btn--primary:hover {
+  background: var(--bleu-fort);
+  box-shadow: var(--shadow-bleu);
+}
+
+.btn--accent {
+  background: var(--bougainvillier);
+  color: var(--on-bougainvillier);
+}
+
+.btn--accent:hover {
+  background: var(--bougainvillier-fort);
+  box-shadow: var(--shadow-md);
+}
+
+.btn--secondary {
+  background: var(--surface);
+  border-color: var(--bleu);
+  color: var(--bleu);
+}
+
+.btn--secondary:hover {
+  background: var(--bleu-pale);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--encre);
+}
+
+.btn--ghost:hover {
+  background: var(--surface-alt);
+}
+
+.btn:focus-visible {
+  border-radius: var(--radius-full);
+  box-shadow: var(--focus-ring);
+}

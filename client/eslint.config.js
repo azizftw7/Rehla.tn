@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Les fichiers de test ne sont pas rechargés à chaud : la règle fast refresh ne les concerne pas.
+    files: ['src/test/**', '**/*.test.{js,jsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])

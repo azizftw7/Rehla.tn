@@ -1,0 +1,299 @@
+/* Rehla.tn — design tokens (couleurs, espacements, typographie). Thème : <html data-theme="light|dark"> */
+:root, [data-theme="light"] {
+  --chaux: #f4f7fb;
+  --surface: #ffffff;
+  --surface-alt: #ebf0f7;
+  --trait: #dae2ec;
+  --trait-fort: #76839a;
+  --encre: #0e1726;
+  --encre-2: #4a566a;
+  --bleu: #0b5cad;
+  --bleu-fort: #084683;
+  --bleu-pale: #e4eefa;
+  --on-bleu: #ffffff;
+  --bougainvillier: #c3326b;
+  --bougainvillier-fort: #a82556;
+  --bougainvillier-pale: #fdeef4;
+  --on-bougainvillier: #ffffff;
+  --lagune: #087570;
+  --lagune-pale: #e6f6f4;
+  --safran: #f2b33d;
+  --safran-pale: #fef2d6;
+  --safran-texte: #8a5600;
+  --on-safran: #1f1500;
+  --succes: #18794a;
+  --succes-pale: #e2f4ea;
+  --danger: #c0331e;
+  --danger-pale: #fde9e5;
+  --on-danger: #ffffff;
+  --alerte: var(--safran-texte);
+  --info: var(--bleu);
+  --focus: #0b5cad;
+  --voile: #0a111d8c;
+  --cat-hebergement: #0b5cad;
+  --cat-restaurant: #e0531f;
+  --cat-activite: #0f8c66;
+  --cat-evenement: #8e44d8;
+  --cat-guide: #e3a21c;
+  --cat-transport: #4a5a73;
+  --serie-1: #0b5cad;
+  --serie-2: #e0531f;
+  --scene-ciel: #dcebfa;
+  --scene-mer: #1c6fc2;
+  --scene-lagune: #2ba59b;
+  --scene-sable: #f1ddb8;
+  --scene-dune: #e2b577;
+  --scene-soleil: #f2b33d;
+  --scene-mur: #ffffff;
+  --scene-porte: #0b5cad;
+  --scene-fleur: #d9437c;
+  --scene-vegetal: #2e8b57;
+  --carte-terre: #f1efe9;
+  --carte-mer: #cfe3f4;
+  --carte-route: #ffffff;
+  --carte-parc: #dcebd8;
+  --shadow-sm: 0 1px 2px #0e172612, 0 1px 3px #0e17261a;
+  --shadow-md: 0 10px 24px -8px #0e172629, 0 2px 6px -2px #0e17261a;
+  --shadow-lg: 0 24px 48px -16px #0e172640, 0 8px 16px -8px #0e172621;
+  --shadow-bleu: 0 10px 24px -8px #0b5cad73;
+  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0b5cad;
+ 
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --chaux: #0a111d;
+  --surface: #111a2a;
+  --surface-alt: #1a2539;
+  --trait: #26334a;
+  --trait-fort: #62728d;
+  --encre: #eaf0f8;
+  --encre-2: #a5b2c6;
+  --bleu: #5da2ff;
+  --bleu-fort: #8cbeff;
+  --bleu-pale: #0f2646;
+  --on-bleu: #04101f;
+  --bougainvillier: #ff6e9f;
+  --bougainvillier-fort: #ff95b9;
+  --bougainvillier-pale: #3a1427;
+  --on-bougainvillier: #2a0716;
+  --lagune: #35c6bc;
+  --lagune-pale: #0b2e2d;
+  --safran: #f5be55;
+  --safran-pale: #372809;
+  --safran-texte: #f6c56a;
+  --on-safran: #1f1500;
+  --succes: #4dcb8c;
+  --succes-pale: #0d2b1e;
+  --danger: #ff7d69;
+  --danger-pale: #3a1510;
+  --on-danger: #2a0904;
+  --focus: #8cbeff;
+  --voile: #000000a6;
+  --serie-1: #3f8ceb;
+  --serie-2: #e5642c;
+  --scene-ciel: #18294a;
+  --scene-mer: #1b4f8f;
+  --scene-lagune: #1e7c76;
+  --scene-sable: #6b5636;
+  --scene-dune: #8c6a3a;
+  --scene-soleil: #f5be55;
+  --scene-mur: #d9e1ec;
+  --scene-porte: #2f6fb8;
+  --scene-fleur: #c93c72;
+  --scene-vegetal: #2a6e4b;
+  --carte-terre: #172131;
+  --carte-mer: #0d2036;
+  --carte-route: #2a3954;
+  --carte-parc: #15302a;
+  --shadow-sm: 0 1px 2px #00000059, 0 1px 3px #00000073;
+  --shadow-md: 0 12px 28px -8px #000000a6, 0 2px 6px -2px #00000080;
+  --shadow-lg: 0 28px 56px -16px #000000cc, 0 8px 16px -8px #00000099;
+  --shadow-bleu: 0 10px 28px -8px #5da2ff59;
+  --focus-ring: 0 0 0 2px #111a2a, 0 0 0 4px #8cbeff;
+ 
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --radius-xs: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+  --duree-rapide: 120ms;
+  --duree-base: 220ms;
+  --duree-lente: 360ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-sortie: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-rebond: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --z-carte: 0;
+  --z-controle: 10;
+  --z-entete: 100;
+  --z-menu: 200;
+  --z-modale: 400;
+  --z-toast: 500;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --font-display: "Alexandria", "Alexandria Arabic", "Readex Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Readex Pro", "Readex Pro Arabic", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+ 
+}
+
+.display-xl {
+  font-family: var(--font-display);
+  font-size: 64px;
+  line-height: 68px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+ 
+}
+
+.display-l {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+ 
+}
+
+.titre-1 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 42px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+ 
+}
+
+.titre-2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+ 
+}
+
+.titre-3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+ 
+}
+
+.titre-4 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+ 
+}
+
+.texte-l {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+ 
+}
+
+.texte {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+ 
+}
+
+.texte-s {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+ 
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+ 
+}
+
+.legende {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+ 
+}
+
+.surtitre {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+ 
+}
+
+.prix {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+ 
+}
+
+.kpi {
+  font-family: var(--font-sans);
+  font-size: 34px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+ 
+}
+
+.donnees {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+ 
+}
+
+.ar-titre {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 48px;
+  font-weight: 700;
+ 
+}
+
+.ar-texte {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 30px;
+  font-weight: 400;
+ 
+}
+

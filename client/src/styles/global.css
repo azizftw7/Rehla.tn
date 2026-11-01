@@ -1,0 +1,173 @@
+/* Styles de base. Toutes les valeurs viennent de tokens.css : aucune couleur en dur. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--encre);
+  background: var(--chaux);
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--duree-base) var(--ease-standard),
+    color var(--duree-base) var(--ease-standard);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul[role='list'],
+ol[role='list'] {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--bleu);
+  text-underline-offset: 0.15em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus visible et cohérent sur tout le site. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-xs);
+}
+
+/* Cibles de focus programmatique (ex. <main> après « Aller au contenu ») : pas d'anneau. */
+[tabindex='-1']:focus-visible {
+  box-shadow: none;
+}
+
+::selection {
+  background: var(--bleu-pale);
+  color: var(--encre);
+}
+
+/* ---------- Utilitaires ---------- */
+
+.container {
+  width: 100%;
+  max-width: var(--bp-xl);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+.section {
+  padding-block: var(--space-12);
+}
+
+/* Motif d'arche : haut en demi-cercle (porte de Sidi Bou Saïd). */
+.arche {
+  border-top-left-radius: var(--radius-full);
+  border-top-right-radius: var(--radius-full);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-toast);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--bleu);
+  color: var(--on-bleu);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+.section-head {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+  max-width: 60ch;
+}
+
+.section-head .surtitre {
+  color: var(--bougainvillier);
+  text-transform: uppercase;
+}
+
+.section-head p {
+  color: var(--encre-2);
+}
+
+/* 768px = --bp-md (les variables CSS ne sont pas utilisables dans les media queries). */
+@media (min-width: 768px) {
+  .container {
+    padding-inline: var(--space-8);
+  }
+
+  .section {
+    padding-block: var(--space-16);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

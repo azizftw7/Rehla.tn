@@ -1,0 +1,82 @@
+.arch-scene {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+/* Disque safran derrière l'arche, pour donner de la profondeur. */
+.arch-scene::before {
+  content: '';
+  position: absolute;
+  inset: auto -8% -6% auto;
+  width: 55%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: var(--safran-pale);
+}
+
+.arch-scene__frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: var(--space-2) solid var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.arch-scene__frame svg {
+  width: 100%;
+  height: 100%;
+}
+
+.scene-ciel {
+  fill: var(--scene-ciel);
+}
+.scene-soleil {
+  fill: var(--scene-soleil);
+}
+.scene-mer {
+  fill: var(--scene-mer);
+}
+.scene-lagune {
+  fill: var(--scene-lagune);
+}
+.scene-sable {
+  fill: var(--scene-sable);
+}
+.scene-mur {
+  fill: var(--scene-mur);
+}
+.scene-porte {
+  fill: var(--scene-porte);
+}
+.scene-fleur {
+  fill: var(--scene-fleur);
+}
+.scene-vegetal {
+  fill: var(--scene-vegetal);
+}
+
+/* Animations très discrètes, coupées si l'utilisateur réduit les mouvements. */
+@media (prefers-reduced-motion: no-preference) {
+  .arch-scene__sun {
+    animation: arch-soleil 6s var(--ease-standard) infinite alternate;
+  }
+
+  .arch-scene__fleurs {
+    transform-origin: 270px 280px;
+    animation: arch-fleurs 5s var(--ease-standard) infinite alternate;
+  }
+}
+
+@keyframes arch-soleil {
+  to {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes arch-fleurs {
+  to {
+    transform: rotate(2deg);
+  }
+}

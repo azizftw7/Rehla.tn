@@ -1,0 +1,78 @@
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--duree-base) var(--ease-standard),
+    box-shadow var(--duree-base) var(--ease-standard);
+}
+
+.searchbar:hover {
+  border-color: var(--trait-fort);
+}
+
+/* Le focus est porté par toute la barre, plus visible qu'un simple champ. */
+.searchbar:focus-within {
+  border-color: var(--bleu);
+  box-shadow: var(--focus-ring);
+}
+
+.searchbar__icon {
+  flex: none;
+  color: var(--encre-2);
+}
+
+.searchbar__input {
+  flex: 1;
+  min-width: 0;
+  padding-block: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--encre);
+}
+
+.searchbar__input:focus-visible {
+  box-shadow: none;
+}
+
+.searchbar__input::placeholder {
+  color: var(--encre-2);
+  opacity: 1;
+}
+
+/* Le bouton « effacer » natif est déjà accessible ; on le garde discret. */
+.searchbar__input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.searchbar--lg {
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+.searchbar--lg .searchbar__input {
+  font-size: 17px;
+}
+
+/* Sur petit écran, le bouton passe sous le champ pour garder un champ lisible. */
+@media (max-width: 479px) {
+  .searchbar--lg {
+    flex-wrap: wrap;
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+  }
+
+  .searchbar--lg .searchbar__input {
+    flex-basis: calc(100% - var(--space-8));
+  }
+
+  .searchbar--lg .btn {
+    flex-basis: 100%;
+  }
+}

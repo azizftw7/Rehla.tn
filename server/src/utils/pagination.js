@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const MAX_LIMIT = 100;
 
-/** Champs ?page=&limit= à fusionner dans un schéma zod de query. */
 export const paginationQuery = {
   page: z.coerce
     .number({ error: 'La page doit être un nombre.' })
@@ -17,20 +16,23 @@ export const paginationQuery = {
     .default(20),
 };
 
-/**
- * Exécute une requête paginée et renvoie { items, total, page, pages }.
- */
 export async function paginate(
   Model,
   filter,
-  { page = 1, limit = 20, sort = { _id: 1 }, select } = {},
+  { page = 1, limit = 20, sort = { _id: 1 }, select, populate } = {},
 ) {
+  let query = Model.find(filter)
+    .select(select)
+    .sort(sort)
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  if (populate) {
+    query = query.populate(populate);
+  }
+
   const [items, total] = await Promise.all([
-    Model.find(filter)
-      .select(select)
-      .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(limit),
+    query,
     Model.countDocuments(filter),
   ]);
   return { items, total, page, pages: Math.ceil(total / limit) };

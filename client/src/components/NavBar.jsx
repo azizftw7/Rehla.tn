@@ -9,6 +9,7 @@ import './NavBar.css'
 
 const NAV_LINKS = [
   { to: '/destinations', label: 'Destinations' },
+  { to: '/services', label: 'Services' },
   { to: '/partage', label: 'Partage de voyage' },
   { to: '/inscription?role=prestataire', label: 'Devenir prestataire' },
 ]

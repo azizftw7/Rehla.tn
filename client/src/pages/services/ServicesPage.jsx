@@ -24,13 +24,24 @@ export default function ServicesPage() {
 
   const [searchInput, setSearchInput] = useState(search)
   const [destinations, setDestinations] = useState([])
-  const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 0 })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [requestState, setRequestState] = useState({
+    fetchedKey: null,
+    data: { items: [], total: 0, page: 1, pages: 0 },
+    error: null,
+  })
 
-  useEffect(() => {
-    setSearchInput(search)
-  }, [search])
+  const effectiveCuisine = type === 'restaurant' ? cuisine : ''
+  const effectiveMaxPrice = !freeOnly ? maxPrice : ''
+  const effectiveFree = freeOnly ? 'true' : ''
+  const requestKey = JSON.stringify({
+    type,
+    destination,
+    search,
+    cuisine: effectiveCuisine,
+    maxPrice: effectiveMaxPrice,
+    free: effectiveFree,
+    page,
+  })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -44,34 +55,46 @@ export default function ServicesPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    setLoading(true)
-    setError(null)
 
     fetchServices(
       {
         type,
         destination,
         search,
-        cuisine: type === 'restaurant' ? cuisine : '',
-        maxPrice: !freeOnly ? maxPrice : '',
-        free: freeOnly ? 'true' : '',
+        cuisine: effectiveCuisine,
+        maxPrice: effectiveMaxPrice,
+        free: effectiveFree,
         page,
         limit: PAGE_LIMIT,
       },
       { signal: controller.signal },
     )
       .then((res) => {
-        setData(res)
-        setLoading(false)
+        setRequestState({ fetchedKey: requestKey, data: res, error: null })
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
-        setError(err.message)
-        setLoading(false)
+        setRequestState({
+          fetchedKey: requestKey,
+          data: { items: [], total: 0, page: 1, pages: 0 },
+          error: err.message,
+        })
       })
 
     return () => controller.abort()
-  }, [type, destination, search, cuisine, maxPrice, freeOnly, page])
+  }, [
+    requestKey,
+    type,
+    destination,
+    search,
+    effectiveCuisine,
+    effectiveMaxPrice,
+    effectiveFree,
+    page,
+  ])
+
+  const loading = requestState.fetchedKey !== requestKey
+  const { data, error } = requestState
 
   const updateParams = (updates, resetPage = true) => {
     const next = new URLSearchParams(searchParams)
@@ -151,11 +174,12 @@ export default function ServicesPage() {
               Recherche
             </label>
             <input
+              key={search}
               id="filtre-recherche"
               type="search"
               className="services-page__input texte-s"
               placeholder="Nom, spécialité, adresse…"
-              value={searchInput}
+              defaultValue={search}
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
@@ -246,7 +270,7 @@ export default function ServicesPage() {
             <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
               {error}
             </p>
-            <Button type="button" variant="primary" onClick={() => updateParams({}, false)}>
+            <Button type="button" variant="primary" onClick={() => setRequestState((s) => ({ ...s, fetchedKey: null }))}>
               Réessayer
             </Button>
           </div>

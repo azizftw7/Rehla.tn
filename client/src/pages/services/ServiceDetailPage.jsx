@@ -13,9 +13,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
-import { formatServicePrice } from '../../components/ServiceCard.jsx'
 import { CATEGORIES } from '../../data/categories.js'
-import { fetchServiceById } from '../../lib/servicesApi.js'
+import { fetchServiceById, formatServicePrice } from '../../lib/servicesApi.js'
 import './ServiceDetailPage.css'
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
@@ -29,34 +28,76 @@ function formatEventDate(value) {
   })
 }
 
-export default function ServiceDetailPage() {
-  const { id } = useParams()
-  const [service, setService] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function ServiceGallery({ photos, serviceName, CategoryIcon }) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [brokenPhotos, setBrokenPhotos] = useState({})
 
+  const currentPhoto = photos[activePhotoIndex]
+  const showPhoto = currentPhoto && !brokenPhotos[activePhotoIndex]
+
+  return (
+    <div className="service-detail__gallery">
+      <div className="service-detail__hero">
+        {showPhoto ? (
+          <img
+            src={currentPhoto}
+            alt={`${serviceName} — photo ${activePhotoIndex + 1}`}
+            onError={() =>
+              setBrokenPhotos((prev) => ({ ...prev, [activePhotoIndex]: true }))
+            }
+          />
+        ) : (
+          <div className="service-detail__placeholder" aria-hidden="true">
+            <Icon icon={CategoryIcon} size={56} />
+          </div>
+        )}
+      </div>
+
+      {photos.length > 1 && (
+        <div className="service-detail__thumbs" role="group" aria-label="Galerie photos">
+          {photos.map((photo, index) => (
+            <button
+              key={`${photo}-${index}`}
+              type="button"
+              className="service-detail__thumb"
+              aria-pressed={index === activePhotoIndex}
+              aria-label={`Afficher la photo ${index + 1}`}
+              onClick={() => setActivePhotoIndex(index)}
+            >
+              <img src={photo} alt="" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function ServiceDetailPage() {
+  const { id } = useParams()
+  const [requestState, setRequestState] = useState({
+    fetchedId: null,
+    service: null,
+    error: null,
+  })
+
   useEffect(() => {
     const controller = new AbortController()
-    setLoading(true)
-    setError(null)
-    setActivePhotoIndex(0)
-    setBrokenPhotos({})
 
     fetchServiceById(id, { signal: controller.signal })
       .then((res) => {
-        setService(res.service)
-        setLoading(false)
+        setRequestState({ fetchedId: id, service: res.service, error: null })
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
-        setError(err)
-        setLoading(false)
+        setRequestState({ fetchedId: id, service: null, error: err })
       })
 
     return () => controller.abort()
   }, [id])
+
+  const loading = requestState.fetchedId !== id
+  const { service, error } = requestState
 
   if (loading) {
     return (
@@ -105,8 +146,6 @@ export default function ServiceDetailPage() {
   const CategoryIcon = category?.icon || UtensilsCrossed
   const accentColor = category ? `var(${category.color})` : 'var(--bleu)'
   const photos = service.photos || []
-  const currentPhoto = photos[activePhotoIndex]
-  const showPhoto = currentPhoto && !brokenPhotos[activePhotoIndex]
   const priceLabel = formatServicePrice(service)
   const backUrl = service.type ? `/services?type=${service.type}` : '/services'
 
@@ -124,40 +163,12 @@ export default function ServiceDetailPage() {
 
         <div className="service-detail__layout">
           <div>
-            <div className="service-detail__gallery">
-              <div className="service-detail__hero">
-                {showPhoto ? (
-                  <img
-                    src={currentPhoto}
-                    alt={`${service.name} — photo ${activePhotoIndex + 1}`}
-                    onError={() =>
-                      setBrokenPhotos((prev) => ({ ...prev, [activePhotoIndex]: true }))
-                    }
-                  />
-                ) : (
-                  <div className="service-detail__placeholder" aria-hidden="true">
-                    <Icon icon={CategoryIcon} size={56} />
-                  </div>
-                )}
-              </div>
-
-              {photos.length > 1 && (
-                <div className="service-detail__thumbs" role="group" aria-label="Galerie photos">
-                  {photos.map((photo, index) => (
-                    <button
-                      key={`${photo}-${index}`}
-                      type="button"
-                      className="service-detail__thumb"
-                      aria-pressed={index === activePhotoIndex}
-                      aria-label={`Afficher la photo ${index + 1}`}
-                      onClick={() => setActivePhotoIndex(index)}
-                    >
-                      <img src={photo} alt="" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ServiceGallery
+              key={id}
+              photos={photos}
+              serviceName={service.name}
+              CategoryIcon={CategoryIcon}
+            />
 
             <header className="service-detail__head">
               <div className="service-detail__badges">

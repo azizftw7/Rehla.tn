@@ -1,5 +1,18 @@
 import { apiGet } from './api.js'
 
+export function formatServicePrice(service) {
+  if (service.free) {
+    return { main: 'Gratuit', unit: '' }
+  }
+  if (service.price?.amount != null) {
+    return {
+      main: `${service.price.amount} DT`,
+      unit: service.price.unit ? `/ ${service.price.unit}` : '',
+    }
+  }
+  return { main: 'Sur demande', unit: '' }
+}
+
 export function fetchServices(params = {}, options = {}) {
   const searchParams = new URLSearchParams()
 

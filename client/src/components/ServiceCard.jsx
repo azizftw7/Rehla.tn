@@ -2,23 +2,11 @@ import { MapPin, Star, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CATEGORIES } from '../data/categories.js'
+import { formatServicePrice } from '../lib/servicesApi.js'
 import Icon from './Icon.jsx'
 import './ServiceCard.css'
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
-
-export function formatServicePrice(service) {
-  if (service.free) {
-    return { main: 'Gratuit', unit: '' }
-  }
-  if (service.price?.amount != null) {
-    return {
-      main: `${service.price.amount} DT`,
-      unit: service.price.unit ? `/ ${service.price.unit}` : '',
-    }
-  }
-  return { main: 'Sur demande', unit: '' }
-}
 
 export default function ServiceCard({ service }) {
   const {

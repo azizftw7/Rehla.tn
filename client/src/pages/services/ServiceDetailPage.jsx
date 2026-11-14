@@ -28,6 +28,12 @@ function formatEventDate(value) {
   })
 }
 
+function getAllServicesLabel(category, type) {
+  if (!category) return 'Voir tous les services'
+  const title = category.title.toLowerCase()
+  return type === 'activite' ? `Voir toutes les ${title}` : `Voir tous les ${title}`
+}
+
 function ServiceGallery({ photos, serviceName, CategoryIcon }) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [brokenPhotos, setBrokenPhotos] = useState({})
@@ -182,6 +188,9 @@ export default function ServiceDetailPage() {
                 {service.activityCategory && (
                   <span className="service-card__tag legende">{service.activityCategory}</span>
                 )}
+                {service.free && (
+                  <span className="service-card__free-tag legende">Gratuit</span>
+                )}
               </div>
 
               <h1 id="service-detail-titre" className="titre-1">
@@ -281,8 +290,8 @@ export default function ServiceDetailPage() {
               )}
             </div>
 
-            <Button to="/services?type=restaurant" variant="secondary">
-              Voir tous les restaurants
+            <Button to={backUrl} variant="secondary">
+              {getAllServicesLabel(category, service.type)}
             </Button>
           </aside>
         </div>

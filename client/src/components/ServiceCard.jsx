@@ -18,6 +18,7 @@ export default function ServiceCard({ service }) {
     photos,
     cuisine,
     activityCategory,
+    free,
     ratingAverage,
     ratingCount,
   } = service
@@ -77,6 +78,7 @@ export default function ServiceCard({ service }) {
             </span>
           )}
           {specialty && <span className="service-card__tag legende">{specialty}</span>}
+          {free && <span className="service-card__free-tag legende">Gratuit</span>}
         </div>
 
         {description && <p className="service-card__description texte-s">{description}</p>}

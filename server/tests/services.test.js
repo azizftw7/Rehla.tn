@@ -33,7 +33,7 @@ beforeEach(async () => {
     },
   });
 
-  [visibleRestaurant, , , hiddenRestaurant] = await Service.create([
+  [visibleRestaurant, , , , hiddenRestaurant] = await Service.create([
     {
       type: 'restaurant',
       name: 'Dar Zarrouk',
@@ -71,6 +71,18 @@ beforeEach(async () => {
       price: { amount: 80, unit: 'personne' },
       ratingAverage: 4.9,
       ratingCount: 20,
+    },
+    {
+      type: 'activite',
+      name: 'Plage de Sidi Mahrez',
+      description: 'Grande plage de sable fin accessible gratuitement',
+      destination: djerba._id,
+      provider: provider._id,
+      location: point(11.005, 33.854),
+      activityCategory: 'Plage',
+      free: true,
+      ratingAverage: 4.7,
+      ratingCount: 15,
     },
     {
       type: 'restaurant',
@@ -143,6 +155,35 @@ describe('US3.2 — GET /api/services?type=restaurant', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.details.map((d) => d.field)).toEqual(['type', 'maxPrice']);
+  });
+});
+
+describe('US3.3 — GET /api/services?type=activite', () => {
+  it('liste les activités visibles triées par note décroissante', async () => {
+    const res = await list({ type: 'activite' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Balade en quad', 'Plage de Sidi Mahrez']);
+    expect(res.body.total).toBe(2);
+  });
+
+  it('filtre les activités par catégorie (activityCategory)', async () => {
+    const res = await list({ type: 'activite', activityCategory: 'plage' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Plage de Sidi Mahrez']);
+    expect(res.body.items[0]).toMatchObject({
+      activityCategory: 'Plage',
+      free: true,
+    });
+  });
+
+  it('filtre uniquement les activités gratuites avec free=true', async () => {
+    const res = await list({ type: 'activite', free: 'true' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Plage de Sidi Mahrez']);
+    expect(res.body.items[0].free).toBe(true);
   });
 });
 

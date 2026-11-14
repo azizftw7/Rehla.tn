@@ -86,10 +86,10 @@ describe('ServicesPage', () => {
     expect(within(cards[0]).getByText('4.8')).toBeInTheDocument()
     expect(within(cards[0]).getByText('Fruits de mer')).toBeInTheDocument()
 
-    expect(within(cards[1]).getByText('Gratuit')).toBeInTheDocument()
+    expect(within(cards[1]).getAllByText('Gratuit')).toHaveLength(2)
   })
 
-  it('filtre par onglet de catégorie et par recherche', async () => {
+  it('filtre par onglet de catégorie, catégorie d’activité et par recherche', async () => {
     const user = userEvent.setup()
     const fetchMock = mockServicesApi([
       jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
@@ -108,9 +108,14 @@ describe('ServicesPage', () => {
     )
 
     await user.type(screen.getByLabelText('Recherche'), 'kayak')
+    await user.type(screen.getByLabelText('Catégorie d’activité'), 'Plage')
     await user.click(screen.getByRole('button', { name: 'Rechercher' }))
     expect(fetchMock).toHaveBeenLastCalledWith(
       expect.stringContaining('search=kayak'),
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('activityCategory=Plage'),
       expect.any(Object),
     )
   })

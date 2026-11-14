@@ -9,6 +9,14 @@ import { fetchDestinationsList, fetchServices } from '../../lib/servicesApi.js'
 import './ServicesPage.css'
 
 const SERVICE_CATEGORIES = CATEGORIES.filter((cat) => cat.type !== 'transport')
+const ACTIVITY_CATEGORY_SUGGESTIONS = [
+  'Plage',
+  'Site historique',
+  'Sports nautiques',
+  'Désert',
+  'Culture et artisanat',
+  'Randonnée',
+]
 const PAGE_LIMIT = 12
 
 export default function ServicesPage() {
@@ -18,6 +26,7 @@ export default function ServicesPage() {
   const destination = searchParams.get('destination') || ''
   const search = searchParams.get('search') || ''
   const cuisine = searchParams.get('cuisine') || ''
+  const activityCategory = searchParams.get('activityCategory') || ''
   const maxPrice = searchParams.get('maxPrice') || ''
   const freeOnly = searchParams.get('free') === 'true'
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
@@ -31,6 +40,7 @@ export default function ServicesPage() {
   })
 
   const effectiveCuisine = type === 'restaurant' ? cuisine : ''
+  const effectiveActivityCategory = type === 'activite' ? activityCategory : ''
   const effectiveMaxPrice = !freeOnly ? maxPrice : ''
   const effectiveFree = freeOnly ? 'true' : ''
   const requestKey = JSON.stringify({
@@ -38,6 +48,7 @@ export default function ServicesPage() {
     destination,
     search,
     cuisine: effectiveCuisine,
+    activityCategory: effectiveActivityCategory,
     maxPrice: effectiveMaxPrice,
     free: effectiveFree,
     page,
@@ -62,6 +73,7 @@ export default function ServicesPage() {
         destination,
         search,
         cuisine: effectiveCuisine,
+        activityCategory: effectiveActivityCategory,
         maxPrice: effectiveMaxPrice,
         free: effectiveFree,
         page,
@@ -88,6 +100,7 @@ export default function ServicesPage() {
     destination,
     search,
     effectiveCuisine,
+    effectiveActivityCategory,
     effectiveMaxPrice,
     effectiveFree,
     page,
@@ -122,7 +135,9 @@ export default function ServicesPage() {
   }
 
   const activeCategory = SERVICE_CATEGORIES.find((cat) => cat.type === type)
-  const hasFilters = Boolean(destination || search || cuisine || maxPrice || freeOnly)
+  const hasFilters = Boolean(
+    destination || search || effectiveCuisine || effectiveActivityCategory || maxPrice || freeOnly,
+  )
 
   return (
     <section className="services-page" aria-labelledby="services-titre">
@@ -144,7 +159,7 @@ export default function ServicesPage() {
             type="button"
             className="services-page__tab label"
             aria-pressed={type === ''}
-            onClick={() => updateParams({ type: '', cuisine: '' })}
+            onClick={() => updateParams({ type: '', cuisine: '', activityCategory: '' })}
           >
             Tous
           </button>
@@ -159,6 +174,7 @@ export default function ServicesPage() {
                 updateParams({
                   type: category.type,
                   cuisine: category.type === 'restaurant' ? cuisine : '',
+                  activityCategory: category.type === 'activite' ? activityCategory : '',
                 })
               }
             >
@@ -219,6 +235,28 @@ export default function ServicesPage() {
             </div>
           )}
 
+          {type === 'activite' && (
+            <div className="services-page__field">
+              <label htmlFor="filtre-categorie-activite" className="legende">
+                Catégorie d’activité
+              </label>
+              <input
+                id="filtre-categorie-activite"
+                type="text"
+                list="categories-activite-list"
+                className="services-page__input texte-s"
+                placeholder="Ex. Plage, Désert, Culture…"
+                value={activityCategory}
+                onChange={(e) => updateParams({ activityCategory: e.target.value })}
+              />
+              <datalist id="categories-activite-list">
+                {ACTIVITY_CATEGORY_SUGGESTIONS.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+            </div>
+          )}
+
           <div className="services-page__field">
             <label htmlFor="filtre-prix" className="legende">
               Budget max (DT)
@@ -270,7 +308,11 @@ export default function ServicesPage() {
             <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
               {error}
             </p>
-            <Button type="button" variant="primary" onClick={() => setRequestState((s) => ({ ...s, fetchedKey: null }))}>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => setRequestState((s) => ({ ...s, fetchedKey: null }))}
+            >
               Réessayer
             </Button>
           </div>

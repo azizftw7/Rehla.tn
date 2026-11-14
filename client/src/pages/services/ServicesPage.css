@@ -44,7 +44,7 @@
 
 .services-page__filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
   align-items: end;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -53,6 +53,19 @@
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+.services-page__filters button[type='submit'],
+.services-page__filters button[type='submit'] > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.services-page__filters button[type='submit'] {
+  height: 40px;
 }
 
 .services-page__field {

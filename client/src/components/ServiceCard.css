@@ -145,3 +145,18 @@
   color: var(--encre-2);
   font-weight: 400;
 }
+.service-card__badge--free {
+  left: auto;
+  right: var(--space-3);
+  background: var(--lagune);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.service-card__free-tag {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--lagune);
+  color: var(--surface);
+  font-weight: 600;
+}

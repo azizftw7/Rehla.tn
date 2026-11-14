@@ -125,6 +125,18 @@ export const services = [
     activityCategory: 'Sports nautiques',
   },
   {
+    key: 'djerba-plage',
+    type: 'activite',
+    name: 'Plage de Sidi Mahrez',
+    description: 'Grande plage de sable fin aux eaux turquoise, idéale pour la baignade et la promenade.',
+    destination: 'djerba',
+    provider: 'prestataire1',
+    location: point(11.005, 33.854),
+    address: 'Zone touristique Midoun, Djerba',
+    free: true,
+    activityCategory: 'Plage',
+  },
+  {
     key: 'djerba-evenement',
     type: 'evenement',
     name: 'Nuit des conteurs de Houmt Souk',

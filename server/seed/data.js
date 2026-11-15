@@ -4,6 +4,9 @@
 
 const point = (lng, lat) => ({ type: 'Point', coordinates: [lng, lat] });
 
+// Date relative au jour du seed (pour qu'une offre de démo soit toujours en cours).
+const daysFromNow = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
 // Le mot de passe des comptes vient de SEED_DEMO_PASSWORD (voir .env.example).
 export const users = [
   { key: 'admin', name: 'Admin Rehla', email: 'admin@demo.rehla.tn', role: 'admin' },
@@ -90,6 +93,7 @@ export const services = [
   {
     key: 'djerba-hebergement',
     type: 'hebergement',
+    accommodationType: 'maison-hotes',
     name: 'Menzel des Palmes Bleues',
     description: "Maison d'hôtes de six chambres autour d'un patio, à dix minutes de la plage.",
     destination: 'djerba',
@@ -171,6 +175,7 @@ export const services = [
   {
     key: 'tozeur-hebergement',
     type: 'hebergement',
+    accommodationType: 'hotel',
     name: "Lodge Sable d'Or",
     description:
       'Chambres en briques ocre au cœur de la palmeraie, piscine et petit-déjeuner inclus.',
@@ -253,6 +258,7 @@ export const services = [
   {
     key: 'sbs-hebergement',
     type: 'hebergement',
+    accommodationType: 'dar',
     name: 'La Maison aux Volets Bleus',
     description: 'Quatre chambres avec vue sur le golfe, terrasse sur le toit.',
     destination: 'sidi-bou-said',
@@ -317,8 +323,8 @@ export const offers = [
     service: 'djerba-hebergement',
     title: "Séjour d'hiver : -15 %",
     discountPercent: 15,
-    startDate: '2026-11-01',
-    endDate: '2027-02-28',
+    startDate: daysFromNow(-7),
+    endDate: daysFromNow(90),
   },
   {
     service: 'tozeur-restaurant',

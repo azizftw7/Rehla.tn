@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
 import ServiceCard, { ServiceCardSkeleton } from '../../components/ServiceCard.jsx'
+import { ACCOMMODATION_TYPES } from '../../data/accommodationTypes.js'
 import { CATEGORIES } from '../../data/categories.js'
 import { EVENT_TYPES } from '../../data/eventTypes.js'
 import { fetchDestinationsList, fetchServices } from '../../lib/servicesApi.js'
@@ -29,6 +30,7 @@ export default function ServicesPage() {
   const cuisine = searchParams.get('cuisine') || ''
   const activityCategory = searchParams.get('activityCategory') || ''
   const eventType = searchParams.get('eventType') || ''
+  const accommodationType = searchParams.get('accommodationType') || ''
   const from = searchParams.get('from') || ''
   const to = searchParams.get('to') || ''
   const maxPrice = searchParams.get('maxPrice') || ''
@@ -46,6 +48,7 @@ export default function ServicesPage() {
 
   const effectiveCuisine = type === 'restaurant' ? cuisine : ''
   const effectiveActivityCategory = type === 'activite' ? activityCategory : ''
+  const effectiveAccommodationType = type === 'hebergement' ? accommodationType : ''
   const effectiveMaxPrice = !freeOnly ? maxPrice : ''
   const effectiveFree = freeOnly ? 'true' : ''
   const isEvent = type === 'evenement'
@@ -60,6 +63,7 @@ export default function ServicesPage() {
     search,
     cuisine: effectiveCuisine,
     activityCategory: effectiveActivityCategory,
+    accommodationType: effectiveAccommodationType,
     maxPrice: effectiveMaxPrice,
     free: effectiveFree,
     eventType: effectiveEventType,
@@ -89,6 +93,7 @@ export default function ServicesPage() {
         search,
         cuisine: effectiveCuisine,
         activityCategory: effectiveActivityCategory,
+        accommodationType: effectiveAccommodationType,
         maxPrice: effectiveMaxPrice,
         free: effectiveFree,
         eventType: effectiveEventType,
@@ -119,6 +124,7 @@ export default function ServicesPage() {
     search,
     effectiveCuisine,
     effectiveActivityCategory,
+    effectiveAccommodationType,
     effectiveMaxPrice,
     effectiveFree,
     effectiveEventType,
@@ -161,6 +167,7 @@ export default function ServicesPage() {
       search ||
       effectiveCuisine ||
       effectiveActivityCategory ||
+      effectiveAccommodationType ||
       effectiveEventType ||
       effectiveFrom ||
       (isEvent && to) ||
@@ -192,6 +199,7 @@ export default function ServicesPage() {
                 type: '',
                 cuisine: '',
                 activityCategory: '',
+                accommodationType: '',
                 eventType: '',
                 from: '',
                 to: '',
@@ -211,6 +219,8 @@ export default function ServicesPage() {
                   type: category.type,
                   cuisine: category.type === 'restaurant' ? cuisine : '',
                   activityCategory: category.type === 'activite' ? activityCategory : '',
+                  accommodationType:
+                    category.type === 'hebergement' ? accommodationType : '',
                   eventType: category.type === 'evenement' ? eventType : '',
                   from: category.type === 'evenement' ? from : '',
                   to: category.type === 'evenement' ? to : '',
@@ -257,6 +267,27 @@ export default function ServicesPage() {
               ))}
             </select>
           </div>
+
+          {type === 'hebergement' && (
+            <div className="services-page__field">
+              <label htmlFor="filtre-type-hebergement" className="legende">
+                Type d’hébergement
+              </label>
+              <select
+                id="filtre-type-hebergement"
+                className="services-page__input texte-s"
+                value={accommodationType}
+                onChange={(e) => updateParams({ accommodationType: e.target.value })}
+              >
+                <option value="">Tous les types</option>
+                {ACCOMMODATION_TYPES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {type === 'restaurant' && (
             <div className="services-page__field">

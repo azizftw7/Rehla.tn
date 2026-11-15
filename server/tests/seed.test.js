@@ -42,6 +42,17 @@ describe('npm run seed', () => {
     expect(reviewed.ratingCount).toBe(2);
     expect(reviewed.ratingAverage).toBe(4.5);
 
+    // US3.1 : chaque hébergement a un type, et au moins une offre en cours sur un hébergement.
+    const lodgings = await db.collection('services').find({ type: 'hebergement' }).toArray();
+    expect(lodgings.every((s) => s.accommodationType)).toBe(true);
+    const now = new Date();
+    const activeLodgingOffer = await db.collection('offers').findOne({
+      service: { $in: lodgings.map((s) => s._id) },
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    });
+    expect(activeLodgingOffer).not.toBeNull();
+
     const admin = await db.collection('users').findOne({ role: 'admin' });
     expect(admin.password).toMatch(/^\$2[aby]\$/);
 

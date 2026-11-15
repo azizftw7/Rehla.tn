@@ -1,4 +1,4 @@
-import { Destination, Service } from '../models/index.js';
+import { Destination, Offer, Service } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { paginate } from '../utils/pagination.js';
 import { escapeRegex } from '../utils/text.js';
@@ -12,6 +12,7 @@ export async function listServices(req, res) {
     search,
     cuisine,
     activityCategory,
+    accommodationType,
     eventType,
     from,
     to,
@@ -54,6 +55,10 @@ export async function listServices(req, res) {
 
   if (activityCategory) {
     filter.activityCategory = { $regex: escapeRegex(activityCategory), $options: 'i' };
+  }
+
+  if (accommodationType) {
+    filter.accommodationType = accommodationType;
   }
 
   if (eventType) {
@@ -112,5 +117,15 @@ export async function getService(req, res) {
     throw ApiError.notFound('Service introuvable.');
   }
 
-  res.json({ service });
+  // Offres en cours : startDate <= maintenant <= endDate.
+  const now = new Date();
+  const offers = await Offer.find({
+    service: service._id,
+    startDate: { $lte: now },
+    endDate: { $gte: now },
+  })
+    .select('title discountPercent discountedPrice startDate endDate')
+    .sort({ endDate: 1 });
+
+  res.json({ service, offers });
 }

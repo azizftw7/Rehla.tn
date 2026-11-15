@@ -2,6 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import { pointSchema } from './pointSchema.js';
 
 export const SERVICE_TYPES = ['hebergement', 'restaurant', 'activite', 'evenement', 'guide'];
+export const ACCOMMODATION_TYPES = ['hotel', 'maison-hotes', 'dar', 'appartement', 'camping'];
 
 const serviceSchema = new Schema(
   {
@@ -46,6 +47,11 @@ const serviceSchema = new Schema(
     },
 
     // Champs propres à chaque type.
+    accommodationType: {
+      // hebergement
+      type: String,
+      enum: { values: ACCOMMODATION_TYPES, message: "Type d'hébergement invalide." },
+    },
     cuisine: { type: String, trim: true }, // restaurant
     activityCategory: { type: String, trim: true }, // activite
     event: {
@@ -69,10 +75,14 @@ serviceSchema.index({ location: '2dsphere' });
 serviceSchema.index({ destination: 1, type: 1 });
 serviceSchema.index({ provider: 1 });
 serviceSchema.index({ type: 1, 'event.startDate': 1 });
+serviceSchema.index({ type: 1, accommodationType: 1 });
 
 serviceSchema.pre('validate', function () {
   if (!this.free && this.price?.amount == null) {
     this.invalidate('price.amount', 'Indiquez un prix ou précisez que le service est gratuit.');
+  }
+  if (this.accommodationType && this.type !== 'hebergement') {
+    this.invalidate('accommodationType', "Le type d'hébergement ne concerne que les hébergements.");
   }
   if (this.type === 'evenement') {
     if (!this.event?.startDate) {

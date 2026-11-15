@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../src/app.js';
-import { Destination, Service, User } from '../src/models/index.js';
+import { Destination, Offer, Service, User } from '../src/models/index.js';
 
 const point = (lng, lat) => ({ type: 'Point', coordinates: [lng, lat] });
 const list = (query) => request(app).get('/api/services').query(query);
@@ -336,5 +336,151 @@ describe('US3.4 — GET /api/services?type=evenement', () => {
     expect(res.body.details[0].message).toBe(
       'La date de début doit être une date au format AAAA-MM-JJ.',
     );
+  });
+});
+
+describe('US3.1 — hébergements', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const daysFromNow = (days) => new Date(Date.now() + days * DAY);
+  let dar;
+
+  beforeEach(async () => {
+    const base = { type: 'hebergement', provider: provider._id, destination: tunis._id };
+    [dar] = await Service.create([
+      {
+        ...base,
+        name: 'Dar El Jasmin',
+        accommodationType: 'dar',
+        location: point(10.341, 36.869),
+        price: { amount: 240, unit: 'nuit' },
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ratingAverage: 4.9,
+      },
+      {
+        ...base,
+        name: 'Hôtel du Golfe',
+        accommodationType: 'hotel',
+        location: point(10.345, 36.87),
+        price: { amount: 180, unit: 'nuit' },
+        ratingAverage: 4.2,
+      },
+      {
+        ...base,
+        name: 'Camping des Pins',
+        accommodationType: 'camping',
+        destination: djerba._id,
+        location: point(10.86, 33.88),
+        price: { amount: 30, unit: 'nuit' },
+      },
+    ]);
+  });
+
+  it('liste les hébergements et filtre par type d’hébergement', async () => {
+    const all = await list({ type: 'hebergement' });
+    expect(all.status).toBe(200);
+    expect(names(all)).toEqual(['Dar El Jasmin', 'Hôtel du Golfe', 'Camping des Pins']);
+
+    const dars = await list({ type: 'hebergement', accommodationType: 'dar' });
+    expect(names(dars)).toEqual(['Dar El Jasmin']);
+    expect(dars.body.items[0].accommodationType).toBe('dar');
+
+    const combined = await list({
+      type: 'hebergement',
+      accommodationType: 'camping',
+      destination: 'djerba',
+    });
+    expect(names(combined)).toEqual(['Camping des Pins']);
+  });
+
+  it('renvoie 400 avec un message en français si le type d’hébergement est inconnu', async () => {
+    const res = await list({ type: 'hebergement', accommodationType: 'chateau' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details).toEqual([
+      {
+        field: 'accommodationType',
+        message: "Type d'hébergement invalide (hotel, maison-hotes, dar, appartement ou camping).",
+      },
+    ]);
+  });
+
+  it('refuse un type d’hébergement sur un service qui n’est pas un hébergement', async () => {
+    await expect(
+      Service.create({
+        type: 'restaurant',
+        name: 'Restaurant test',
+        accommodationType: 'hotel',
+        destination: tunis._id,
+        provider: provider._id,
+        location: point(10.34, 36.86),
+        price: { amount: 20 },
+      }),
+    ).rejects.toThrow("Le type d'hébergement ne concerne que les hébergements.");
+  });
+
+  it('renvoie la fiche avec la vidéo, la localisation et uniquement les offres en cours', async () => {
+    await Offer.create([
+      {
+        service: dar._id,
+        title: 'Week-end en amoureux',
+        discountedPrice: 199,
+        startDate: daysFromNow(-2),
+        endDate: daysFromNow(10),
+      },
+      {
+        service: dar._id,
+        title: 'Séjour long : -20 %',
+        discountPercent: 20,
+        startDate: daysFromNow(-30),
+        endDate: daysFromNow(3),
+      },
+      {
+        service: dar._id,
+        title: 'Offre expirée',
+        discountPercent: 10,
+        startDate: daysFromNow(-60),
+        endDate: daysFromNow(-1),
+      },
+      {
+        service: dar._id,
+        title: 'Offre à venir',
+        discountPercent: 10,
+        startDate: daysFromNow(5),
+        endDate: daysFromNow(20),
+      },
+      {
+        service: visibleRestaurant._id,
+        title: 'Offre d’un autre service',
+        discountPercent: 5,
+        startDate: daysFromNow(-1),
+        endDate: daysFromNow(1),
+      },
+    ]);
+
+    const res = await request(app).get(`/api/services/${dar._id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.service).toMatchObject({
+      name: 'Dar El Jasmin',
+      accommodationType: 'dar',
+      videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      price: { amount: 240, unit: 'nuit' },
+      location: { type: 'Point', coordinates: [10.341, 36.869] },
+    });
+    // Triées par date de fin croissante (celle qui se termine le plus tôt d'abord).
+    expect(res.body.offers.map((o) => o.title)).toEqual([
+      'Séjour long : -20 %',
+      'Week-end en amoureux',
+    ]);
+    expect(res.body.offers[0]).toMatchObject({ discountPercent: 20 });
+    expect(res.body.offers[1]).toMatchObject({ discountedPrice: 199 });
+    expect(res.body.offers[0]).not.toHaveProperty('service');
+  });
+
+  it('renvoie une liste d’offres vide si le service n’en a aucune en cours', async () => {
+    const res = await request(app).get(`/api/services/${dar._id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.offers).toEqual([]);
   });
 });

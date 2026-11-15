@@ -1,6 +1,7 @@
 import { CalendarDays, MapPin, Star, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getAccommodationLabel } from '../data/accommodationTypes.js'
 import { CATEGORIES } from '../data/categories.js'
 import { formatEventPeriod, formatServicePrice } from '../lib/servicesApi.js'
 import Icon from './Icon.jsx'
@@ -18,6 +19,7 @@ export default function ServiceCard({ service }) {
     photos,
     cuisine,
     activityCategory,
+    accommodationType,
     event,
     free,
     ratingAverage,
@@ -30,7 +32,11 @@ export default function ServiceCard({ service }) {
   const category = CATEGORY_MAP[type]
   const CategoryIcon = category?.icon || UtensilsCrossed
   const accentColor = category ? `var(${category.color})` : 'var(--bleu)'
-  const specialty = cuisine || activityCategory || (type === 'evenement' ? event?.eventType : null)
+  const specialty =
+    cuisine ||
+    activityCategory ||
+    (type === 'evenement' ? event?.eventType : null) ||
+    (type === 'hebergement' ? getAccommodationLabel(accommodationType) : null)
   const eventPeriod = type === 'evenement' ? formatEventPeriod(event) : null
   const priceLabel = formatServicePrice(service)
 

@@ -61,3 +61,52 @@ export function fetchServiceById(id, options = {}) {
 export function fetchDestinationsList(options = {}) {
   return apiGet('/destinations?limit=100', options)
 }
+
+/** Réduction d'une offre : « -15 % » ou « 199 DT » (prix réduit). */
+export function formatOfferDiscount(offer) {
+  if (offer?.discountPercent != null) return `-${offer.discountPercent} %`
+  if (offer?.discountedPrice != null) return `${offer.discountedPrice} DT`
+  return null
+}
+
+/** Fin d'une offre : « jusqu'au 28 février 2027 » (null si la date est invalide). */
+export function formatOfferEnd(offer) {
+  if (!offer?.endDate) return null
+  const end = new Date(offer.endDate)
+  if (Number.isNaN(end.getTime())) return null
+  const label = end.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+  return `jusqu’au ${label}`
+}
+
+const YOUTUBE_ID = /^[\w-]{11}$/
+
+/**
+ * Adresse d'intégration d'une vidéo YouTube (youtube.com/watch?v=…, youtu.be/…, /embed/…,
+ * /shorts/…), ou null si le lien n'est pas une vidéo YouTube reconnue.
+ */
+export function getYoutubeEmbedUrl(videoUrl) {
+  let url
+  try {
+    url = new URL(videoUrl)
+  } catch {
+    return null
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+
+  const host = url.hostname.replace(/^(www\.|m\.)/, '')
+  let id = null
+  if (host === 'youtu.be') {
+    id = url.pathname.slice(1)
+  } else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+    const [, first, second] = url.pathname.split('/')
+    if (first === 'watch') id = url.searchParams.get('v')
+    else if (first === 'embed' || first === 'shorts') id = second
+  }
+
+  return id && YOUTUBE_ID.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null
+}

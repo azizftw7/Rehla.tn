@@ -243,3 +243,86 @@ describe('ServicesPage — événements (US3.4)', () => {
     expect(await screen.findAllByRole('article')).toHaveLength(1)
   })
 })
+
+const LODGINGS = [
+  {
+    _id: 'h1',
+    type: 'hebergement',
+    name: 'Menzel des Palmes Bleues',
+    accommodationType: 'maison-hotes',
+    destination: { name: 'Djerba', slug: 'djerba' },
+    price: { amount: 180, unit: 'nuit' },
+    free: false,
+    ratingAverage: 4.5,
+    ratingCount: 2,
+    photos: [],
+  },
+]
+
+describe('ServicesPage — hébergements (US3.1)', () => {
+  it('affiche le type d’hébergement en badge sur la carte', async () => {
+    mockServicesApi([jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 })])
+    renderServicesPage('/services?type=hebergement')
+
+    const [card] = await screen.findAllByRole('article')
+    expect(within(card).getByText('Maison d’hôtes')).toHaveClass('service-card__tag')
+  })
+
+  it('n’affiche le filtre « Type d’hébergement » que sur l’onglet Hébergements', async () => {
+    const user = userEvent.setup()
+    mockServicesApi([
+      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
+      jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=restaurant')
+    await screen.findAllByRole('article')
+
+    expect(screen.queryByLabelText('Type d’hébergement')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Hébergements' }))
+
+    const select = screen.getByLabelText('Type d’hébergement')
+    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Tous les types',
+      'Hôtel',
+      'Maison d’hôtes',
+      'Dar',
+      'Appartement',
+      'Camping',
+    ])
+  })
+
+  it('synchronise le type d’hébergement avec l’URL et l’envoie à l’API', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 }),
+      jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=hebergement&accommodationType=dar')
+    await screen.findAllByRole('article')
+
+    expect(screen.getByLabelText('Type d’hébergement')).toHaveValue('dar')
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('accommodationType=dar'),
+      expect.any(Object),
+    )
+
+    await user.selectOptions(screen.getByLabelText('Type d’hébergement'), 'maison-hotes')
+
+    expect(screen.getByLabelText('Type d’hébergement')).toHaveValue('maison-hotes')
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('accommodationType=maison-hotes'),
+      expect.any(Object),
+    )
+  })
+
+  it('ignore le type d’hébergement sur les autres onglets', async () => {
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=restaurant&accommodationType=dar')
+    await screen.findAllByRole('article')
+
+    expect(fetchMock.mock.calls.at(-1)[0]).not.toContain('accommodationType')
+  })
+})

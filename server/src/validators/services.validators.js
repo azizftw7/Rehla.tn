@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SERVICE_TYPES } from '../models/Service.js';
+import { ACCOMMODATION_TYPES, SERVICE_TYPES } from '../models/Service.js';
 import { paginationQuery } from '../utils/pagination.js';
 
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
@@ -48,6 +48,11 @@ const listServicesObject = z.object({
     .string({ error: 'La catégorie doit être un texte.' })
     .trim()
     .max(60, 'La catégorie ne peut pas dépasser 60 caractères.')
+    .optional(),
+  accommodationType: z
+    .enum(ACCOMMODATION_TYPES, {
+      error: "Type d'hébergement invalide (hotel, maison-hotes, dar, appartement ou camping).",
+    })
     .optional(),
   free: z
     .enum(['true', 'false'], { error: 'Le filtre gratuit doit être vrai ou faux.' })

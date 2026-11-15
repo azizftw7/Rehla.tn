@@ -1,0 +1,22 @@
+/* Carte de saisie de la position (cadre, marqueur et thème : MapFrame.css). */
+
+.location-picker {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.location-picker__map .map-frame__canvas {
+  height: 280px;
+  cursor: crosshair;
+}
+
+.location-picker__center {
+  justify-self: start;
+}
+
+/* Tablette (768px = --bp-md) */
+@media (min-width: 768px) {
+  .location-picker__map .map-frame__canvas {
+    height: 340px;
+  }
+}

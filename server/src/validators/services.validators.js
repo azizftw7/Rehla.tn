@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ACCOMMODATION_TYPES, SERVICE_TYPES } from '../models/Service.js';
 import { paginationQuery } from '../utils/pagination.js';
 
-const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+export const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
 
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -10,7 +10,7 @@ const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
  * Date ISO (« 2026-12-01 » ou « 2026-12-01T18:00:00Z ») convertie en Date.
  * Une date seule vaut le début du jour (from) ou la fin du jour (to), en UTC.
  */
-const isoDate = (label, endOfDay) =>
+export const isoDate = (label, endOfDay) =>
   z
     .string({ error: `${label} doit être un texte.` })
     .trim()

@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   CalendarDays,
+  CircleCheck,
   Globe,
   Languages,
   MapPin,
@@ -13,7 +14,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
 import { getAccommodationLabel } from '../../data/accommodationTypes.js'
@@ -167,6 +168,8 @@ function MapPlaceholder() {
 
 export default function ServiceDetailPage() {
   const { id } = useParams()
+  // Message passé par la page précédente (ex. « … est publié » après la création).
+  const notice = useLocation().state?.notice
   const [reload, setReload] = useState(0)
   const [requestState, setRequestState] = useState({
     fetchedKey: null,
@@ -268,6 +271,13 @@ export default function ServiceDetailPage() {
       aria-labelledby="service-detail-titre"
     >
       <div className="container">
+        {notice && (
+          <p className="service-detail__notice texte-s" role="status">
+            <Icon icon={CircleCheck} size={18} />
+            {notice}
+          </p>
+        )}
+
         <Link to={backUrl} className="service-detail__back texte-s">
           <Icon icon={ArrowLeft} size={16} />
           Retour aux {category ? category.title.toLowerCase() : 'services'}

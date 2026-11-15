@@ -262,3 +262,23 @@ describe('ServiceDetailPage — hébergement (US3.1)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('ServiceDetailPage — message de confirmation', () => {
+  it('affiche le message transmis par la page précédente (service publié)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ service: SERVICE_DETAIL, offers: [] })))
+    const notice = '« Dar Zarrouk » est publié : les voyageurs peuvent le voir dès maintenant.'
+
+    renderDetailPage({ pathname: '/services/s1', state: { notice } })
+
+    expect(await screen.findByRole('status')).toHaveTextContent(notice)
+  })
+
+  it('n’affiche aucun message sans état de navigation', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ service: SERVICE_DETAIL, offers: [] })))
+
+    renderDetailPage()
+
+    await screen.findByRole('heading', { level: 1, name: 'Dar Zarrouk' })
+    expect(screen.queryByText(/est publié/)).not.toBeInTheDocument()
+  })
+})

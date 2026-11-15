@@ -48,13 +48,15 @@ export function setUnauthorizedHandler(handler) {
 }
 
 /**
- * Requête JSON vers l'API. Ajoute « Authorization: Bearer <token> » si un token est stocké.
+ * Requête vers l'API : corps JSON, ou FormData (multipart, ex. envoi de photos) tel quel. Ajoute « Authorization: Bearer <token> » si un token est stocké.
  * Un 401 sur une requête authentifiée supprime le token et déconnecte l'utilisateur.
  */
 export async function apiRequest(method, path, { body, signal } = {}) {
   const token = getStoredToken()
   const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // Avec un FormData, le navigateur pose lui-même « multipart/form-data; boundary=… ».
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+  if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (token) headers.Authorization = `Bearer ${token}`
 
   let response
@@ -63,7 +65,7 @@ export async function apiRequest(method, path, { body, signal } = {}) {
       method,
       signal,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined || isFormData ? body : JSON.stringify(body),
     })
   } catch (err) {
     if (err.name === 'AbortError') throw err

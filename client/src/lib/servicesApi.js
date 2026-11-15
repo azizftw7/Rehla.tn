@@ -1,4 +1,4 @@
-import { apiGet } from './api.js'
+import { apiGet, apiPost } from './api.js'
 
 export function formatServicePrice(service) {
   if (service.free) {
@@ -109,4 +109,12 @@ export function getYoutubeEmbedUrl(videoUrl) {
   }
 
   return id && YOUTUBE_ID.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null
+}
+
+/**
+ * POST /api/provider/services (prestataire connecté) → { service }.
+ * formData : champs à plat + jusqu'à 5 fichiers « photos » (multipart/form-data).
+ */
+export function createService(formData, options = {}) {
+  return apiPost('/provider/services', formData, options)
 }

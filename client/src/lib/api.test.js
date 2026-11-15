@@ -34,6 +34,20 @@ describe('client HTTP', () => {
     expect(JSON.parse(options.body)).toEqual({ email: 'a@b.tn' })
   })
 
+  it('envoie un FormData tel quel, sans forcer le Content-Type JSON', async () => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, 'jeton-123')
+    const fetchMock = stubFetch(jsonResponse({ service: { _id: 's1' } }, 201))
+    const form = new FormData()
+    form.append('name', 'Dar Yasmine')
+
+    await apiPost('/provider/services', form)
+
+    const [, options] = fetchMock.mock.calls[0]
+    expect(options.body).toBe(form)
+    expect(options.headers['Content-Type']).toBeUndefined()
+    expect(options.headers.Authorization).toBe('Bearer jeton-123')
+  })
+
   it('ajoute le token stocké à toutes les méthodes', async () => {
     localStorage.setItem(TOKEN_STORAGE_KEY, 'jeton-123')
     const fetchMock = stubFetch(jsonResponse({}))

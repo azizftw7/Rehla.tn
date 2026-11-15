@@ -5,6 +5,19 @@ import { describe, expect, it, vi } from 'vitest'
 import { jsonResponse, LocationDisplay } from '../../test/utils.jsx'
 import DestinationsPage from './DestinationsPage.jsx'
 
+// Leaflet ne fonctionne pas dans jsdom : la carte est remplacée par un composant qui expose ses props.
+vi.mock('../../components/DestinationsMap.jsx', () => ({
+  default: function DestinationsMapMock({ destinations, selectedSlug }) {
+    return (
+      <div
+        data-testid="destinations-map"
+        data-destinations={destinations.map((d) => d.slug).join(',')}
+        data-selected={selectedSlug ?? ''}
+      />
+    )
+  },
+}))
+
 const DESTINATIONS = [
   {
     _id: 'd1',
@@ -12,17 +25,29 @@ const DESTINATIONS = [
     slug: 'djerba',
     region: 'Médenine',
     description: 'L’île aux plages.',
+    location: { type: 'Point', coordinates: [10.86, 33.81] },
   },
-  { _id: 'd2', name: 'Tozeur', slug: 'tozeur', region: 'Tozeur', description: 'Porte du désert.' },
+  {
+    _id: 'd2',
+    name: 'Tozeur',
+    slug: 'tozeur',
+    region: 'Tozeur',
+    description: 'Porte du désert.',
+    location: { type: 'Point', coordinates: [8.13, 33.92] },
+  },
 ]
 
-const list = (items, extra = {}) =>
-  jsonResponse({ items, total: items.length, page: 1, pages: 1, ...extra })
+const list = (items) => jsonResponse({ items, total: items.length, page: 1, pages: 1 })
 
-function mockApi(responses) {
-  const queue = [...responses]
-  const fetchMock = vi.fn(() => {
-    const next = queue.shift() ?? list([])
+/**
+ * Simule l'API : la grille (limit=12) et la carte (limit=100) ont chacune leur file de réponses.
+ * Une fois la file vide, la dernière réponse est réutilisée.
+ */
+function mockApi({ grid = [list(DESTINATIONS)], map = [list(DESTINATIONS)] } = {}) {
+  const queues = { grid: [...grid], map: [...map] }
+  const take = (name) => (queues[name].length > 1 ? queues[name].shift() : queues[name][0])
+  const fetchMock = vi.fn((url) => {
+    const next = take(url.includes('limit=100') ? 'map' : 'grid')
     return next instanceof Error ? Promise.reject(next) : Promise.resolve(next)
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -47,9 +72,11 @@ function renderPage(route = '/destinations') {
   )
 }
 
+const compactList = () => screen.findByRole('list', { name: /Sur la carte/ })
+
 describe('DestinationsPage', () => {
-  it('affiche la liste des destinations', async () => {
-    const fetchMock = mockApi([list(DESTINATIONS)])
+  it('affiche la grille paginée et la carte de toutes les destinations', async () => {
+    const fetchMock = mockApi()
     renderPage()
 
     expect(
@@ -62,20 +89,35 @@ describe('DestinationsPage', () => {
       '/destinations/djerba',
     )
     expect(screen.getByText('2 destinations')).toBeInTheDocument()
+
+    await compactList()
+    expect(await screen.findByTestId('destinations-map')).toHaveAttribute(
+      'data-destinations',
+      'djerba,tozeur',
+    )
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/destinations?page=1&limit=12'),
       expect.any(Object),
     )
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/destinations\?limit=100$/),
+      expect.any(Object),
+    )
   })
 
-  it('lit la recherche dans l’URL et la met à jour à l’envoi du formulaire', async () => {
+  it('transmet à la carte les destinations de la recherche (URL puis formulaire)', async () => {
     const user = userEvent.setup()
-    const fetchMock = mockApi([list([DESTINATIONS[0]]), list([DESTINATIONS[1]])])
+    const fetchMock = mockApi({
+      grid: [list([DESTINATIONS[0]]), list([DESTINATIONS[1]])],
+      map: [list([DESTINATIONS[0]]), list([DESTINATIONS[1]])],
+    })
     renderPage('/destinations?search=djer&types=hebergement')
 
-    await screen.findAllByRole('article')
+    const map = await screen.findByTestId('destinations-map')
+    await compactList()
+    expect(map).toHaveAttribute('data-destinations', 'djerba')
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/destinations?search=djer&page=1&limit=12'),
+      expect.stringMatching(/\/destinations\?search=djer&limit=100$/),
       expect.any(Object),
     )
     const input = screen.getByLabelText('Rechercher une destination')
@@ -87,15 +129,30 @@ describe('DestinationsPage', () => {
 
     expect(screen.getByTestId('location')).toHaveTextContent('/destinations?search=tozeur')
     expect(await screen.findByRole('link', { name: 'Tozeur' })).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      expect.stringContaining('search=tozeur'),
-      expect.any(Object),
-    )
+    expect(
+      await screen.findByRole('button', { name: 'Voir Tozeur sur la carte' }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('destinations-map')).toHaveAttribute('data-destinations', 'tozeur')
   })
 
-  it('affiche « aucun résultat » et permet d’effacer la recherche', async () => {
+  it('sélectionne une destination sur la carte depuis la liste compacte', async () => {
     const user = userEvent.setup()
-    mockApi([list([]), list(DESTINATIONS)])
+    mockApi()
+    renderPage()
+
+    const list = await compactList()
+    expect(within(list).getByText('Médenine')).toBeInTheDocument()
+
+    const button = within(list).getByRole('button', { name: 'Voir Tozeur sur la carte' })
+    await user.click(button)
+
+    expect(button).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('destinations-map')).toHaveAttribute('data-selected', 'tozeur')
+  })
+
+  it('affiche « aucun résultat » (grille et carte) et permet d’effacer la recherche', async () => {
+    const user = userEvent.setup()
+    mockApi({ grid: [list([]), list(DESTINATIONS)], map: [list([]), list(DESTINATIONS)] })
     renderPage('/destinations?search=atlantide')
 
     expect(
@@ -103,6 +160,8 @@ describe('DestinationsPage', () => {
         name: 'Aucune destination ne correspond à « atlantide »',
       }),
     ).toBeInTheDocument()
+    expect(await screen.findByText('Aucun résultat pour « atlantide ».')).toBeInTheDocument()
+    expect(screen.getByTestId('destinations-map')).toHaveAttribute('data-destinations', '')
 
     const buttons = screen.getAllByRole('button', { name: 'Effacer la recherche' })
     await user.click(buttons[buttons.length - 1])
@@ -113,7 +172,11 @@ describe('DestinationsPage', () => {
 
   it('affiche une erreur et relance la requête avec « Réessayer »', async () => {
     const user = userEvent.setup()
-    const fetchMock = mockApi([new TypeError('Failed to fetch'), list(DESTINATIONS)])
+    const failure = new TypeError('Failed to fetch')
+    const fetchMock = mockApi({
+      grid: [failure, list(DESTINATIONS)],
+      map: [failure, list(DESTINATIONS)],
+    })
     renderPage()
 
     const alert = await screen.findByRole('alert')
@@ -123,6 +186,7 @@ describe('DestinationsPage', () => {
     await user.click(within(alert).getByRole('button', { name: 'Réessayer' }))
 
     expect(await screen.findAllByRole('article')).toHaveLength(2)
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    await compactList()
+    expect(fetchMock).toHaveBeenCalledTimes(4)
   })
 })

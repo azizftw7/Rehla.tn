@@ -1,118 +1,16 @@
-/* Carte des services : la carte crée son propre contexte d'empilement (z-index --z-carte)
-   pour que les panneaux et contrôles Leaflet (z-index 400 à 1000) restent sous la NavBar. */
-.services-map {
-  position: relative;
-  z-index: var(--z-carte);
-  isolation: isolate;
-  overflow: hidden;
-  border: 1px solid var(--trait);
-  border-radius: var(--radius-lg);
-  background: var(--surface-alt);
-  box-shadow: var(--shadow-sm);
-}
-
-.services-map__canvas {
-  height: 360px;
-  width: 100%;
-  background: var(--surface-alt);
-  font: inherit;
-}
+/* Carte des services d'une destination (cadre, marqueurs et thème : MapFrame.css). */
 
 /* Ordinateur (1024px = --bp-lg) */
 @media (min-width: 1024px) {
-  .services-map__canvas {
+  .services-map .map-frame__canvas {
     height: 560px;
   }
-}
-
-.services-map__banner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--trait);
-  background: var(--surface);
-  color: var(--encre);
-}
-
-/* ---------- Marqueurs : goutte à la couleur de la catégorie ---------- */
-
-.services-map__icon {
-  background: none;
-  border: 0;
-}
-
-.services-map__marker {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 28px;
-  height: 28px;
-  margin-left: -14px;
-  border: 3px solid var(--surface);
-  border-radius: 50% 50% 50% 0;
-  background: var(--marker-color, var(--bleu));
-  box-shadow: var(--shadow-md);
-  transform: rotate(-45deg);
-  transition: transform var(--duree-base) var(--ease-standard);
-}
-
-.services-map__marker::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  width: 8px;
-  height: 8px;
-  margin: auto;
-  border-radius: var(--radius-full);
-  background: var(--surface);
-}
-
-.services-map__marker--selected {
-  width: 36px;
-  height: 36px;
-  margin-left: -18px;
-}
-
-.services-map__icon:hover .services-map__marker {
-  transform: rotate(-45deg) scale(1.1);
-}
-
-.leaflet-marker-icon.services-map__icon:focus-visible {
-  outline: none;
-}
-
-.leaflet-marker-icon.services-map__icon:focus-visible .services-map__marker {
-  box-shadow: var(--focus-ring);
-}
-
-/* ---------- Bulles et contrôles adaptés au thème ---------- */
-
-.services-map .leaflet-popup-content-wrapper,
-.services-map .leaflet-popup-tip {
-  background: var(--surface);
-  color: var(--encre);
-  box-shadow: var(--shadow-md);
-}
-
-.services-map .leaflet-popup-content-wrapper {
-  border-radius: var(--radius-md);
-}
-
-.services-map .leaflet-popup-content {
-  margin: var(--space-3) var(--space-4);
-}
-
-.services-map .leaflet-container a.leaflet-popup-close-button {
-  color: var(--encre-2);
 }
 
 .services-map__popup {
   display: grid;
   gap: var(--space-1);
   min-width: 160px;
-  font-family: var(--font-sans);
 }
 
 .services-map__popup-category {
@@ -132,39 +30,4 @@
 .services-map .services-map__popup-link {
   color: var(--bleu);
   font-weight: 500;
-}
-
-.services-map .leaflet-bar {
-  border: 1px solid var(--trait);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-
-.services-map .leaflet-bar a {
-  background: var(--surface);
-  color: var(--encre);
-  border-bottom-color: var(--trait);
-}
-
-.services-map .leaflet-bar a:hover {
-  background: var(--surface-alt);
-}
-
-.services-map .leaflet-control-attribution {
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
-  color: var(--encre-2);
-}
-
-.services-map .leaflet-control-attribution a {
-  color: var(--bleu);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .services-map__marker {
-    transition: none;
-  }
-
-  .services-map__icon:hover .services-map__marker {
-    transform: rotate(-45deg);
-  }
 }

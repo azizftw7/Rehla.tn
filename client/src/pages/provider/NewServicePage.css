@@ -45,6 +45,11 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Chargement du service à modifier (US6.2). */
+.nouveau-service__loading {
+  display: grid;
+}
+
 #service-erreur-generale:empty {
   display: none;
 }

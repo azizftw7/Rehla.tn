@@ -1,4 +1,4 @@
-// Outils du formulaire « Publier un service » (NewServicePage).
+// Outils du formulaire de service (ServiceForm) : publication (US6.1) et modification (US6.2).
 
 export const MAX_PHOTOS = 5
 export const MAX_PHOTO_SIZE = 5 * 1024 * 1024
@@ -87,7 +87,44 @@ export function checkPhotos(current, files) {
   return { kept, error }
 }
 
-/** Construit le FormData envoyé à l'API (champs vides et champs d'un autre type omis). */
+const dateInput = (value) => (value ? String(value).slice(0, 10) : '')
+
+/** Valeurs du formulaire préremplies avec un service existant (modification). */
+export function serviceToForm(service) {
+  const [longitude, latitude] = service.location?.coordinates || []
+  const text = (value) => (value == null ? '' : String(value))
+  return {
+    type: service.type,
+    free: Boolean(service.free),
+    values: {
+      ...EMPTY_VALUES,
+      name: text(service.name),
+      description: text(service.description),
+      destination: text(service.destination?._id ?? service.destination),
+      address: text(service.address),
+      price: text(service.price?.amount),
+      priceUnit: text(service.price?.unit),
+      accommodationType: text(service.accommodationType),
+      cuisine: text(service.cuisine),
+      activityCategory: text(service.activityCategory),
+      eventType: text(service.event?.eventType),
+      startDate: dateInput(service.event?.startDate),
+      endDate: dateInput(service.event?.endDate),
+      hours: text(service.event?.hours),
+      languages: (service.languages || []).join(', '),
+      phone: text(service.contact?.phone),
+      website: text(service.contact?.website),
+      videoUrl: text(service.videoUrl),
+      latitude: text(latitude),
+      longitude: text(longitude),
+    },
+  }
+}
+
+/**
+ * Construit le FormData envoyé à l'API (champs vides et champs d'un autre type omis).
+ * photos : nouvelles photos { file } et, en modification, photos déjà publiées { src } (gardées).
+ */
 export function buildFormData(type, values, free, photos) {
   const data = new FormData()
   data.append('type', type)
@@ -104,6 +141,9 @@ export function buildFormData(type, values, free, photos) {
     if (value) data.append(field, value)
   }
   data.append('free', free ? 'true' : 'false')
-  for (const photo of photos) data.append('photos', photo.file)
+  for (const photo of photos) {
+    if (photo.file) data.append('photos', photo.file)
+    else if (photo.src) data.append('keptPhotos', photo.src)
+  }
   return data
 }

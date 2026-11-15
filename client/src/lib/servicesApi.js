@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './api.js'
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from './api.js'
 
 export function formatServicePrice(service) {
   if (service.free) {
@@ -117,4 +117,34 @@ export function getYoutubeEmbedUrl(videoUrl) {
  */
 export function createService(formData, options = {}) {
   return apiPost('/provider/services', formData, options)
+}
+
+// ---------- Espace prestataire : ses propres services (masqués compris) ----------
+
+/** GET /api/provider/services?page&limit → { items, total, page, pages }. */
+export function fetchMyServices({ page = 1, limit = 12 } = {}, options = {}) {
+  return apiGet(`/provider/services?page=${page}&limit=${limit}`, options)
+}
+
+/** GET /api/provider/services/:id → { service } (404 si le service n'est pas le sien). */
+export function fetchMyService(id, options = {}) {
+  return apiGet(`/provider/services/${encodeURIComponent(id)}`, options)
+}
+
+/**
+ * PUT /api/provider/services/:id → { service }.
+ * formData : mêmes champs que la création + keptPhotos (anciennes photos gardées) + nouvelles « photos ».
+ */
+export function updateService(id, formData, options = {}) {
+  return apiPut(`/provider/services/${encodeURIComponent(id)}`, formData, options)
+}
+
+/** PATCH /api/provider/services/:id/visibilite → { service }. */
+export function setServiceHidden(id, hidden, options = {}) {
+  return apiPatch(`/provider/services/${encodeURIComponent(id)}/visibilite`, { hidden }, options)
+}
+
+/** DELETE /api/provider/services/:id (204). */
+export function deleteService(id, options = {}) {
+  return apiDelete(`/provider/services/${encodeURIComponent(id)}`, options)
 }

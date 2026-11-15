@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ACCOMMODATION_TYPES, SERVICE_TYPES } from '../models/Service.js';
+import { paginationQuery } from '../utils/pagination.js';
 import { isoDate, OBJECT_ID_REGEX } from './services.validators.js';
 
 // Le formulaire est envoyé en multipart/form-data : tous les champs arrivent en texte
@@ -67,99 +68,126 @@ const booleanField = z.preprocess(
     .transform((value) => value !== 'false'),
 );
 
-export const createServiceSchema = z
-  .object({
-    type: z.enum(SERVICE_TYPES, {
-      error: 'Choisissez un type : hébergement, restaurant, activité, événement ou guide.',
-    }),
-    name: requiredText('Le nom', 120, 'Le nom du service est obligatoire.'),
-    description: optional(text('La description', 5000)),
-    destination: z.preprocess(
-      emptyToUndefined,
-      z
-        .string({ error: 'Choisissez une destination.' })
-        .trim()
-        .regex(OBJECT_ID_REGEX, 'Destination invalide.'),
+// Champs de la fiche, communs à la création (POST) et à la modification (PUT).
+const serviceFields = {
+  type: z.enum(SERVICE_TYPES, {
+    error: 'Choisissez un type : hébergement, restaurant, activité, événement ou guide.',
+  }),
+  name: requiredText('Le nom', 120, 'Le nom du service est obligatoire.'),
+  description: optional(text('La description', 5000)),
+  destination: z.preprocess(
+    emptyToUndefined,
+    z
+      .string({ error: 'Choisissez une destination.' })
+      .trim()
+      .regex(OBJECT_ID_REGEX, 'Destination invalide.'),
+  ),
+  address: optional(text("L'adresse", 250)),
+  latitude: coordinate('La latitude', TUNISIA_BOUNDS.minLat, TUNISIA_BOUNDS.maxLat),
+  longitude: coordinate('La longitude', TUNISIA_BOUNDS.minLng, TUNISIA_BOUNDS.maxLng),
+
+  free: booleanField,
+  price: optional(
+    z.coerce
+      .number({ error: 'Le prix doit être un nombre.' })
+      .refine(Number.isFinite, { error: 'Le prix doit être un nombre.' })
+      .min(0, 'Le prix ne peut pas être négatif.')
+      .max(1000000, 'Le prix est trop élevé.'),
+  ),
+  priceUnit: optional(text("L'unité de prix", 30)),
+
+  phone: optional(
+    text('Le téléphone', 30).regex(
+      /^\+?[0-9 .-]{6,}$/,
+      'Le numéro de téléphone ne doit contenir que des chiffres, espaces, points ou tirets.',
     ),
-    address: optional(text("L'adresse", 250)),
-    latitude: coordinate('La latitude', TUNISIA_BOUNDS.minLat, TUNISIA_BOUNDS.maxLat),
-    longitude: coordinate('La longitude', TUNISIA_BOUNDS.minLng, TUNISIA_BOUNDS.maxLng),
+  ),
+  website: optional(httpUrl('Le site web')),
+  videoUrl: optional(httpUrl('Le lien de la vidéo')),
 
-    free: booleanField,
-    price: optional(
-      z.coerce
-        .number({ error: 'Le prix doit être un nombre.' })
-        .refine(Number.isFinite, { error: 'Le prix doit être un nombre.' })
-        .min(0, 'Le prix ne peut pas être négatif.')
-        .max(1000000, 'Le prix est trop élevé.'),
-    ),
-    priceUnit: optional(text("L'unité de prix", 30)),
+  // Champs propres au type.
+  accommodationType: optional(
+    z.enum(ACCOMMODATION_TYPES, { error: "Choisissez un type d'hébergement." }),
+  ),
+  cuisine: optional(text('Le type de cuisine', 60)),
+  activityCategory: optional(text('La catégorie', 60)),
+  eventType: optional(text("Le type d'événement", 60)),
+  startDate: optional(isoDate('La date de début', false)),
+  endDate: optional(isoDate('La date de fin', false)),
+  hours: optional(text('Les horaires', 60)),
+  languages,
+};
 
-    phone: optional(
-      text('Le téléphone', 30).regex(
-        /^\+?[0-9 .-]{6,}$/,
-        'Le numéro de téléphone ne doit contenir que des chiffres, espaces, points ou tirets.',
-      ),
-    ),
-    website: optional(httpUrl('Le site web')),
-    videoUrl: optional(httpUrl('Le lien de la vidéo')),
+/** Règles qui dépendent de plusieurs champs (prix ou gratuit, champs propres au type). */
+function refineService(data, ctx) {
+  const requireField = (field, message) => {
+    if (data[field] === undefined) ctx.addIssue({ code: 'custom', path: [field], message });
+  };
 
-    // Champs propres au type.
-    accommodationType: optional(
-      z.enum(ACCOMMODATION_TYPES, { error: "Choisissez un type d'hébergement." }),
-    ),
-    cuisine: optional(text('Le type de cuisine', 60)),
-    activityCategory: optional(text('La catégorie', 60)),
-    eventType: optional(text("Le type d'événement", 60)),
-    startDate: optional(isoDate('La date de début', false)),
-    endDate: optional(isoDate('La date de fin', false)),
-    hours: optional(text('Les horaires', 60)),
-    languages,
-  })
-  .superRefine(
-    (data, ctx) => {
-      const requireField = (field, message) => {
-        if (data[field] === undefined) ctx.addIssue({ code: 'custom', path: [field], message });
-      };
+  if (!data.free) requireField('price', 'Indiquez un prix ou cochez « Gratuit ».');
 
-      if (!data.free) requireField('price', 'Indiquez un prix ou cochez « Gratuit ».');
-
-      switch (data.type) {
-        case 'hebergement':
-          requireField('accommodationType', "Choisissez un type d'hébergement.");
-          break;
-        case 'restaurant':
-          requireField('cuisine', 'Indiquez le type de cuisine.');
-          break;
-        case 'activite':
-          requireField('activityCategory', "Indiquez la catégorie d'activité.");
-          break;
-        case 'evenement':
-          requireField('startDate', "La date de début de l'événement est obligatoire.");
-          if (
-            data.startDate instanceof Date &&
-            data.endDate instanceof Date &&
-            data.endDate < data.startDate
-          ) {
-            ctx.addIssue({
-              code: 'custom',
-              path: ['endDate'],
-              message: 'La date de fin doit être postérieure ou égale à la date de début.',
-            });
-          }
-          break;
-        case 'guide':
-          requireField('languages', 'Indiquez au moins une langue parlée.');
-          break;
-        default:
-          break;
+  switch (data.type) {
+    case 'hebergement':
+      requireField('accommodationType', "Choisissez un type d'hébergement.");
+      break;
+    case 'restaurant':
+      requireField('cuisine', 'Indiquez le type de cuisine.');
+      break;
+    case 'activite':
+      requireField('activityCategory', "Indiquez la catégorie d'activité.");
+      break;
+    case 'evenement':
+      requireField('startDate', "La date de début de l'événement est obligatoire.");
+      if (
+        data.startDate instanceof Date &&
+        data.endDate instanceof Date &&
+        data.endDate < data.startDate
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['endDate'],
+          message: 'La date de fin doit être postérieure ou égale à la date de début.',
+        });
       }
-      // « when » : ces règles s'exécutent même si d'autres champs sont déjà invalides,
-      // pour afficher toutes les erreurs du formulaire en une seule fois.
-      // (Un champ invalide garde sa valeur : il n'est pas signalé une deuxième fois comme manquant.)
-    },
-    { when: () => true },
-  );
+      break;
+    case 'guide':
+      requireField('languages', 'Indiquez au moins une langue parlée.');
+      break;
+    default:
+      break;
+  }
+}
+
+// « when » : ces règles s'exécutent même si d'autres champs sont déjà invalides,
+// pour afficher toutes les erreurs du formulaire en une seule fois.
+// (Un champ invalide garde sa valeur : il n'est pas signalé une deuxième fois comme manquant.)
+const ALWAYS = { when: () => true };
+
+export const createServiceSchema = z.object(serviceFields).superRefine(refineService, ALWAYS);
+
+// Photos déjà publiées que le prestataire garde : champ répété (keptPhotos=url&keptPhotos=url).
+// Absent = toutes les anciennes photos sont retirées.
+const keptPhotos = z.preprocess(
+  (value) => {
+    if (value == null || value === '') return [];
+    return (Array.isArray(value) ? value : [value]).filter((item) => item !== '');
+  },
+  z
+    .array(z.string({ error: 'Photo conservée invalide.' }).trim())
+    .max(5, 'Gardez au plus 5 photos.'),
+);
+
+export const updateServiceSchema = z
+  .object({ ...serviceFields, keptPhotos })
+  .superRefine(refineService, ALWAYS);
+
+export const providerServicesQuerySchema = z.object({ ...paginationQuery });
+
+export const visibilitySchema = z.object({
+  hidden: z.boolean({
+    error: 'Indiquez si le service doit être masqué (true) ou affiché (false).',
+  }),
+});
 
 /**
  * Convertit les champs validés (à plat) en document Service.

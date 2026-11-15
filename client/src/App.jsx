@@ -8,6 +8,8 @@ import DestinationPage from './pages/destinations/DestinationPage.jsx'
 import DestinationsPage from './pages/destinations/DestinationsPage.jsx'
 import HomePage from './pages/home/HomePage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
+import EditServicePage from './pages/provider/EditServicePage.jsx'
+import MyServicesPage from './pages/provider/MyServicesPage.jsx'
 import NewServicePage from './pages/provider/NewServicePage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
 import ServicesPage from './pages/services/ServicesPage.jsx'
@@ -24,7 +26,9 @@ export default function App() {
         <Route path="connexion" element={<LoginPage />} />
         <Route path="inscription" element={<RegisterPage />} />
         <Route element={<ProtectedRoute roles={['prestataire']} />}>
+          <Route path="prestataire/services" element={<MyServicesPage />} />
           <Route path="prestataire/services/nouveau" element={<NewServicePage />} />
+          <Route path="prestataire/services/:id/modifier" element={<EditServicePage />} />
         </Route>
         {import.meta.env.DEV && <Route path="test-erreur" element={<CrashTestPage />} />}
         <Route path="*" element={<NotFoundPage />} />

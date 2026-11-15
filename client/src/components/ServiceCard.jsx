@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Star, UtensilsCrossed } from 'lucide-react'
+import { CalendarDays, EyeOff, MapPin, Star, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getAccommodationLabel } from '../data/accommodationTypes.js'
@@ -9,7 +9,13 @@ import './ServiceCard.css'
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
 
-export default function ServiceCard({ service }) {
+/**
+ * Carte d'un service.
+ * - to : cible du lien (par défaut la fiche publique) ;
+ * - children : actions affichées en bas de la carte (ex. « Mes services » du prestataire) ;
+ * - un service masqué (hidden) porte le badge « Masqué ».
+ */
+export default function ServiceCard({ service, to, children }) {
   const {
     _id,
     type,
@@ -24,6 +30,7 @@ export default function ServiceCard({ service }) {
     free,
     ratingAverage,
     ratingCount,
+    hidden,
   } = service
 
   const [imageFailed, setImageFailed] = useState(false)
@@ -41,7 +48,10 @@ export default function ServiceCard({ service }) {
   const priceLabel = formatServicePrice(service)
 
   return (
-    <article className="service-card" style={{ '--service-accent': accentColor }}>
+    <article
+      className={`service-card${hidden ? ' service-card--hidden' : ''}`}
+      style={{ '--service-accent': accentColor }}
+    >
       <div className="service-card__media arche">
         {showImage ? (
           <img
@@ -61,12 +71,18 @@ export default function ServiceCard({ service }) {
           <Icon icon={CategoryIcon} size={14} />
           {category?.label || type}
         </span>
+        {hidden && (
+          <span className="service-card__badge service-card__badge--hidden legende">
+            <Icon icon={EyeOff} size={14} />
+            Masqué
+          </span>
+        )}
       </div>
 
       <div className="service-card__body">
         <div className="service-card__header">
           <h3 className="titre-4">
-            <Link to={`/services/${_id}`} className="service-card__link">
+            <Link to={to || `/services/${_id}`} className="service-card__link">
               {name}
             </Link>
           </h3>
@@ -109,6 +125,8 @@ export default function ServiceCard({ service }) {
             </span>
           )}
         </div>
+
+        {children && <div className="service-card__actions">{children}</div>}
       </div>
     </article>
   )

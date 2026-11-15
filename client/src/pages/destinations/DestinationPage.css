@@ -166,3 +166,8 @@
     transform: none;
   }
 }
+
+/* Filtres par type de transport (onglet Transports, US4.1) : dans la colonne de la liste. */
+.destination-page__modes {
+  margin-bottom: 0;
+}

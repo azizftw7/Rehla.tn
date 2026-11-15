@@ -4,18 +4,22 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import '../../components/DestinationCard.css'
 import Icon from '../../components/Icon.jsx'
+import TransportCard from '../../components/TransportCard.jsx'
 import { CATEGORIES } from '../../data/categories.js'
+import { TRANSPORT_TYPE_MAP, TRANSPORT_TYPES } from '../../data/transportTypes.js'
 import { fetchDestinationBySlug, toLatLng } from '../../lib/destinationsApi.js'
 import { fetchServices, formatServicePrice } from '../../lib/servicesApi.js'
+import { fetchTransports } from '../../lib/transportsApi.js'
 import '../services/ServicesPage.css'
 import './DestinationPage.css'
 
 // Leaflet n'est chargé que sur cette page.
 const ServicesMap = lazy(() => import('../../components/ServicesMap.jsx'))
 
-const SERVICE_CATEGORIES = CATEGORIES.filter((cat) => cat.type !== 'transport')
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
+const TRANSPORT_CATEGORY = CATEGORY_MAP.transport
 const SERVICES_LIMIT = 100
+const TRANSPORTS_LIMIT = 100
 // Tableau vide stable : la carte ne se recadre que lorsque la liste change vraiment.
 const NO_SERVICES = []
 // Centre de la Tunisie, si la destination n'a pas de coordonnées valides.
@@ -45,10 +49,93 @@ function ListSkeleton() {
   )
 }
 
+/** Liste des transports pour rejoindre la destination, filtrable par type (US4.1). */
+function TransportsPanel({ state, loading, mode, destinationName, onSelectMode, onRetry }) {
+  const transports = loading ? [] : state.items
+  const total = transports.length
+  const activeMode = TRANSPORT_TYPE_MAP[mode]
+
+  return (
+    <>
+      <div
+        className="services-page__tabs destination-page__modes"
+        role="group"
+        aria-label="Filtrer par type de transport"
+        style={{ '--tab-accent': `var(${TRANSPORT_CATEGORY.color})` }}
+      >
+        <button
+          type="button"
+          className="services-page__tab label"
+          aria-pressed={mode === ''}
+          onClick={() => onSelectMode('')}
+        >
+          Tous
+        </button>
+        {TRANSPORT_TYPES.map((transportType) => (
+          <button
+            key={transportType.value}
+            type="button"
+            className="services-page__tab label"
+            aria-pressed={mode === transportType.value}
+            onClick={() => onSelectMode(transportType.value)}
+          >
+            <Icon icon={transportType.icon} size={16} />
+            {transportType.label}
+          </button>
+        ))}
+      </div>
+
+      <p className="destination-page__count texte-s" aria-live="polite">
+        {loading
+          ? 'Chargement des transports…'
+          : `${total} transport${total > 1 ? 's' : ''}${activeMode ? ` · ${activeMode.title}` : ''}`}
+      </p>
+
+      {state.error && !loading ? (
+        <div className="destination-page__state" role="alert">
+          <h2 className="titre-4">Impossible de charger les transports</h2>
+          <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
+            {state.error}
+          </p>
+          <Button type="button" variant="primary" onClick={onRetry}>
+            Réessayer
+          </Button>
+        </div>
+      ) : loading ? (
+        <ListSkeleton />
+      ) : total === 0 ? (
+        <div className="destination-page__state">
+          <h2 className="titre-4">Aucun transport référencé pour cette destination.</h2>
+          {mode && (
+            <Button type="button" variant="secondary" onClick={() => onSelectMode('')}>
+              Voir tous les transports
+            </Button>
+          )}
+        </div>
+      ) : (
+        <ul
+          className="destination-page__list"
+          aria-label={`Transports pour rejoindre ${destinationName}`}
+        >
+          {transports.map((transport) => (
+            <li key={transport._id}>
+              <TransportCard transport={transport} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
+}
+
 export default function DestinationPage() {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const type = searchParams.get('type') || ''
+  // Onglet « Transports » (US4.1) : la liste affiche les transports à la place des services.
+  const isTransport = type === 'transport'
+  const rawMode = isTransport ? searchParams.get('mode') || '' : ''
+  const transportMode = TRANSPORT_TYPE_MAP[rawMode] ? rawMode : ''
   const mapRef = useRef(null)
 
   const [destinationReload, setDestinationReload] = useState(0)
@@ -62,8 +149,12 @@ export default function DestinationPage() {
   const [servicesState, setServicesState] = useState({ key: null, items: [], error: null })
   const [selected, setSelected] = useState({ key: null, id: null })
 
+  const [transportsReload, setTransportsReload] = useState(0)
+  const [transportsState, setTransportsState] = useState({ key: null, items: [], error: null })
+
   const destinationKey = `${slug}|${destinationReload}`
   const servicesKey = `${slug}|${type}|${servicesReload}`
+  const transportsKey = `${slug}|${transportMode}|${transportsReload}`
 
   useEffect(() => {
     const controller = new AbortController()
@@ -79,6 +170,7 @@ export default function DestinationPage() {
   }, [slug, destinationKey])
 
   useEffect(() => {
+    if (isTransport) return undefined
     const controller = new AbortController()
     fetchServices({ destination: slug, type, limit: SERVICES_LIMIT }, { signal: controller.signal })
       .then((res) => setServicesState({ key: servicesKey, items: res.items || [], error: null }))
@@ -87,16 +179,38 @@ export default function DestinationPage() {
         setServicesState({ key: servicesKey, items: [], error: err.message })
       })
     return () => controller.abort()
-  }, [slug, type, servicesKey])
+  }, [slug, type, isTransport, servicesKey])
+
+  useEffect(() => {
+    if (!isTransport) return undefined
+    const controller = new AbortController()
+    fetchTransports(
+      { destination: slug, type: transportMode, limit: TRANSPORTS_LIMIT },
+      { signal: controller.signal },
+    )
+      .then((res) =>
+        setTransportsState({ key: transportsKey, items: res.items || [], error: null }),
+      )
+      .catch((err) => {
+        if (err.name === 'AbortError') return
+        setTransportsState({ key: transportsKey, items: [], error: err.message })
+      })
+    return () => controller.abort()
+  }, [slug, isTransport, transportMode, transportsKey])
 
   const destinationLoading = destinationState.key !== destinationKey
   const servicesLoading = servicesState.key !== servicesKey
+  const transportsLoading = transportsState.key !== transportsKey
   const { destination, error: destinationError } = destinationState
   // La sélection ne vaut que pour la liste affichée (elle s'efface quand on change d'onglet).
   const selectedId = selected.key === `${slug}|${type}` ? selected.id : null
 
   const selectType = (nextType) => {
     setSearchParams(nextType ? { type: nextType } : {})
+  }
+
+  const selectTransportMode = (nextMode) => {
+    setSearchParams(nextMode ? { type: 'transport', mode: nextMode } : { type: 'transport' })
   }
 
   const selectService = (id) => {
@@ -167,8 +281,9 @@ export default function DestinationPage() {
   }
 
   const center = toLatLng(destination.location) || TUNISIA_CENTER
-  const activeCategory = SERVICE_CATEGORIES.find((cat) => cat.type === type)
-  const services = servicesLoading ? NO_SERVICES : servicesState.items
+  const activeCategory = CATEGORY_MAP[type]
+  // Onglet Transports : aucun marqueur, la carte reste centrée sur la destination.
+  const services = isTransport || servicesLoading ? NO_SERVICES : servicesState.items
   const total = services.length
 
   return (
@@ -200,7 +315,7 @@ export default function DestinationPage() {
           >
             Tous
           </button>
-          {SERVICE_CATEGORIES.map((category) => (
+          {CATEGORIES.map((category) => (
             <button
               key={category.type}
               type="button"
@@ -224,86 +339,103 @@ export default function DestinationPage() {
                 services={services}
                 selectedId={selectedId}
                 onSelect={selectService}
-                label={`Carte des services à ${destination.name}`}
+                label={
+                  isTransport
+                    ? `Carte de ${destination.name}`
+                    : `Carte des services à ${destination.name}`
+                }
               />
             </Suspense>
           </div>
 
           <div className="destination-page__aside">
-            <p className="destination-page__count texte-s" aria-live="polite">
-              {servicesLoading
-                ? 'Chargement des adresses…'
-                : `${total} adresse${total > 1 ? 's' : ''}${
-                    activeCategory ? ` · ${activeCategory.title}` : ''
-                  }`}
-            </p>
-
-            {servicesState.error && !servicesLoading ? (
-              <div className="destination-page__state" role="alert">
-                <h2 className="titre-4">Impossible de charger les services</h2>
-                <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
-                  {servicesState.error}
-                </p>
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() => setServicesReload((n) => n + 1)}
-                >
-                  Réessayer
-                </Button>
-              </div>
-            ) : servicesLoading ? (
-              <ListSkeleton />
-            ) : total === 0 ? (
-              <div className="destination-page__state">
-                <h2 className="titre-4">Aucun service dans cette catégorie pour le moment.</h2>
-                {type && (
-                  <Button type="button" variant="secondary" onClick={() => selectType('')}>
-                    Voir tous les services
-                  </Button>
-                )}
-              </div>
+            {isTransport ? (
+              <TransportsPanel
+                state={transportsState}
+                loading={transportsLoading}
+                mode={transportMode}
+                destinationName={destination.name}
+                onSelectMode={selectTransportMode}
+                onRetry={() => setTransportsReload((n) => n + 1)}
+              />
             ) : (
-              <ul className="destination-page__list" aria-label="Services de la destination">
-                {services.map((service) => {
-                  const category = CATEGORY_MAP[service.type]
-                  const price = formatServicePrice(service)
-                  const isSelected = service._id === selectedId
-                  return (
-                    <li
-                      key={service._id}
-                      className="destination-page__item"
-                      data-selected={isSelected}
-                      style={{ '--item-accent': `var(${category?.color || '--bleu'})` }}
+              <>
+                <p className="destination-page__count texte-s" aria-live="polite">
+                  {servicesLoading
+                    ? 'Chargement des adresses…'
+                    : `${total} adresse${total > 1 ? 's' : ''}${
+                        activeCategory ? ` · ${activeCategory.title}` : ''
+                      }`}
+                </p>
+
+                {servicesState.error && !servicesLoading ? (
+                  <div className="destination-page__state" role="alert">
+                    <h2 className="titre-4">Impossible de charger les services</h2>
+                    <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
+                      {servicesState.error}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={() => setServicesReload((n) => n + 1)}
                     >
-                      <div className="destination-page__item-body">
-                        <span className="destination-page__item-category legende">
-                          {category?.label || service.type}
-                        </span>
-                        <Link
-                          to={`/services/${service._id}`}
-                          className="destination-page__item-name titre-4"
+                      Réessayer
+                    </Button>
+                  </div>
+                ) : servicesLoading ? (
+                  <ListSkeleton />
+                ) : total === 0 ? (
+                  <div className="destination-page__state">
+                    <h2 className="titre-4">Aucun service dans cette catégorie pour le moment.</h2>
+                    {type && (
+                      <Button type="button" variant="secondary" onClick={() => selectType('')}>
+                        Voir tous les services
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <ul className="destination-page__list" aria-label="Services de la destination">
+                    {services.map((service) => {
+                      const category = CATEGORY_MAP[service.type]
+                      const price = formatServicePrice(service)
+                      const isSelected = service._id === selectedId
+                      return (
+                        <li
+                          key={service._id}
+                          className="destination-page__item"
+                          data-selected={isSelected}
+                          style={{ '--item-accent': `var(${category?.color || '--bleu'})` }}
                         >
-                          {service.name}
-                        </Link>
-                        <span className="destination-page__item-price texte-s">
-                          {price.main} {price.unit}
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        icon={MapPin}
-                        className="destination-page__locate"
-                        aria-label={`Voir ${service.name} sur la carte`}
-                        aria-pressed={isSelected}
-                        onClick={() => showOnMap(service._id)}
-                      />
-                    </li>
-                  )
-                })}
-              </ul>
+                          <div className="destination-page__item-body">
+                            <span className="destination-page__item-category legende">
+                              {category?.label || service.type}
+                            </span>
+                            <Link
+                              to={`/services/${service._id}`}
+                              className="destination-page__item-name titre-4"
+                            >
+                              {service.name}
+                            </Link>
+                            <span className="destination-page__item-price texte-s">
+                              {price.main} {price.unit}
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            icon={MapPin}
+                            className="destination-page__locate"
+                            aria-label={`Voir ${service.name} sur la carte`}
+                            aria-pressed={isSelected}
+                            onClick={() => showOnMap(service._id)}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </>
             )}
           </div>
         </div>

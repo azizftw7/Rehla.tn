@@ -13,6 +13,10 @@ import './ServicesMap.css'
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
 const DEFAULT_ZOOM = 13
 const SELECTED_ZOOM = 15
+const SINGLE_SERVICE_ZOOM = 15
+const FIT_MAX_ZOOM = 16
+const FIT_PADDING = [40, 40]
+const NO_SERVICES = []
 
 const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_ATTRIBUTION =
@@ -45,6 +49,28 @@ function prefersReducedMotion() {
   return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
 }
 
+/**
+ * Cadre la carte à chaque changement de la liste (chargement, changement d'onglet) :
+ * tous les marqueurs visibles, un seul service en gros plan, ou la destination s'il n'y a rien.
+ */
+function FitToServices({ placed, centerLat, centerLng }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const animate = !prefersReducedMotion()
+    if (placed.length > 1) {
+      const bounds = L.latLngBounds(placed.map(({ position }) => position))
+      map.fitBounds(bounds, { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM, animate })
+    } else if (placed.length === 1) {
+      map.setView(placed[0].position, SINGLE_SERVICE_ZOOM, { animate })
+    } else {
+      map.setView([centerLat, centerLng], DEFAULT_ZOOM, { animate })
+    }
+  }, [map, placed, centerLat, centerLng])
+
+  return null
+}
+
 /** Centre la carte sur le service sélectionné puis ouvre sa bulle. */
 function FocusSelected({ selectedId, positions, markersRef }) {
   const map = useMap()
@@ -74,7 +100,13 @@ function FocusSelected({ selectedId, positions, markersRef }) {
  * - selectedId : service à mettre en avant (la carte s'y déplace et ouvre sa bulle)
  * - onSelect : appelé quand on clique sur un marqueur
  */
-export default function ServicesMap({ center, services = [], selectedId, onSelect, label }) {
+export default function ServicesMap({
+  center,
+  services = NO_SERVICES,
+  selectedId,
+  onSelect,
+  label,
+}) {
   const [tilesUnavailable, setTilesUnavailable] = useState(false)
   const markersRef = useRef(new Map())
 
@@ -153,6 +185,7 @@ export default function ServicesMap({ center, services = [], selectedId, onSelec
           )
         })}
 
+        <FitToServices placed={placed} centerLat={center[0]} centerLng={center[1]} />
         <FocusSelected selectedId={selectedId} positions={positions} markersRef={markersRef} />
       </MapContainer>
     </div>

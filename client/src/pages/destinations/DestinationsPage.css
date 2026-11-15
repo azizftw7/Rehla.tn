@@ -1,0 +1,44 @@
+.destinations-page {
+  padding-block: var(--space-8) var(--space-16);
+}
+
+.destinations-page__header {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+/* Barre de recherche : même cadre que les filtres de ServicesPage. */
+.destinations-page__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.destinations-page__field {
+  flex: 1 1 220px;
+}
+
+.destinations-page__search button[type='submit'] {
+  height: 40px;
+}
+
+.destinations-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.destinations-page__grid > li {
+  display: grid;
+}

@@ -16,6 +16,8 @@ const ServicesMap = lazy(() => import('../../components/ServicesMap.jsx'))
 const SERVICE_CATEGORIES = CATEGORIES.filter((cat) => cat.type !== 'transport')
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
 const SERVICES_LIMIT = 100
+// Tableau vide stable : la carte ne se recadre que lorsque la liste change vraiment.
+const NO_SERVICES = []
 // Centre de la Tunisie, si la destination n'a pas de coordonnées valides.
 const TUNISIA_CENTER = [34.0, 9.5]
 
@@ -166,15 +168,15 @@ export default function DestinationPage() {
 
   const center = toLatLng(destination.location) || TUNISIA_CENTER
   const activeCategory = SERVICE_CATEGORIES.find((cat) => cat.type === type)
-  const services = servicesLoading ? [] : servicesState.items
+  const services = servicesLoading ? NO_SERVICES : servicesState.items
   const total = services.length
 
   return (
     <section className="destination-page" aria-labelledby="destination-titre">
       <div className="container">
-        <Link to="/" className="destination-page__back texte-s">
+        <Link to="/destinations" className="destination-page__back texte-s">
           <Icon icon={ArrowLeft} size={16} />
-          Retour à l’accueil
+          Toutes les destinations
         </Link>
 
         <header className="destination-page__header">

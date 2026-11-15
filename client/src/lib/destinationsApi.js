@@ -1,5 +1,15 @@
 import { apiGet } from './api.js'
 
+/** GET /api/destinations?search=&page=&limit= → { items, total, page, pages } */
+export function fetchDestinations({ search, page, limit } = {}, options = {}) {
+  const params = new URLSearchParams()
+  if (search) params.set('search', search)
+  if (page) params.set('page', String(page))
+  if (limit) params.set('limit', String(limit))
+  const query = params.toString()
+  return apiGet(`/destinations${query ? `?${query}` : ''}`, options)
+}
+
 /** GET /api/destinations/:slug → { destination } */
 export function fetchDestinationBySlug(slug, options = {}) {
   return apiGet(`/destinations/${encodeURIComponent(slug)}`, options)

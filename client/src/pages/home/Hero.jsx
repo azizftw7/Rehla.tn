@@ -21,7 +21,7 @@ export default function Hero() {
       types.includes(type) ? types.filter((t) => t !== type) : [...types, type],
     )
 
-  // La page de résultats (/destinations) arrive dans une prochaine story.
+  // Résultats sur /destinations (le paramètre types est réservé à un filtre ultérieur).
   const search = (text) => {
     const params = new URLSearchParams()
     if (text) params.set('search', text)

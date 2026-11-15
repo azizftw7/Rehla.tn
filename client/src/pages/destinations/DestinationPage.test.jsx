@@ -82,6 +82,10 @@ describe('DestinationPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Sidi Bou Saïd' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Tunis')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Toutes les destinations' })).toHaveAttribute(
+      'href',
+      '/destinations',
+    )
     expect(screen.getByText(/village bleu et blanc/)).toBeInTheDocument()
 
     const map = await screen.findByTestId('services-map')

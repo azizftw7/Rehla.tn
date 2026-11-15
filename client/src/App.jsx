@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import CrashTestPage from './pages/dev/CrashTestPage.jsx'
 import DestinationPage from './pages/destinations/DestinationPage.jsx'
+import DestinationsPage from './pages/destinations/DestinationsPage.jsx'
 import HomePage from './pages/home/HomePage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
@@ -12,6 +13,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="destinations" element={<DestinationsPage />} />
         <Route path="destinations/:slug" element={<DestinationPage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="services/:id" element={<ServiceDetailPage />} />

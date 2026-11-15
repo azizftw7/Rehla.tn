@@ -1,8 +1,8 @@
-import { MapPin, Star, UtensilsCrossed } from 'lucide-react'
+import { CalendarDays, MapPin, Star, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CATEGORIES } from '../data/categories.js'
-import { formatServicePrice } from '../lib/servicesApi.js'
+import { formatEventPeriod, formatServicePrice } from '../lib/servicesApi.js'
 import Icon from './Icon.jsx'
 import './ServiceCard.css'
 
@@ -18,6 +18,7 @@ export default function ServiceCard({ service }) {
     photos,
     cuisine,
     activityCategory,
+    event,
     free,
     ratingAverage,
     ratingCount,
@@ -29,7 +30,8 @@ export default function ServiceCard({ service }) {
   const category = CATEGORY_MAP[type]
   const CategoryIcon = category?.icon || UtensilsCrossed
   const accentColor = category ? `var(${category.color})` : 'var(--bleu)'
-  const specialty = cuisine || activityCategory
+  const specialty = cuisine || activityCategory || (type === 'evenement' ? event?.eventType : null)
+  const eventPeriod = type === 'evenement' ? formatEventPeriod(event) : null
   const priceLabel = formatServicePrice(service)
 
   return (
@@ -80,6 +82,13 @@ export default function ServiceCard({ service }) {
           {specialty && <span className="service-card__tag legende">{specialty}</span>}
           {free && <span className="service-card__free-tag legende">Gratuit</span>}
         </div>
+
+        {eventPeriod && (
+          <p className="service-card__dates texte-s">
+            <Icon icon={CalendarDays} size={15} />
+            {eventPeriod}
+          </p>
+        )}
 
         {description && <p className="service-card__description texte-s">{description}</p>}
 

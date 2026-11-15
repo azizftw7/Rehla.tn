@@ -50,6 +50,8 @@ const serviceSchema = new Schema(
     activityCategory: { type: String, trim: true }, // activite
     event: {
       // evenement
+      // Type d'événement : festival, concert, fête locale, salon…
+      eventType: { type: String, trim: true, maxlength: 60 },
       startDate: Date,
       endDate: Date,
       hours: { type: String, trim: true }, // ex. « 20h – 23h »
@@ -66,6 +68,7 @@ const serviceSchema = new Schema(
 serviceSchema.index({ location: '2dsphere' });
 serviceSchema.index({ destination: 1, type: 1 });
 serviceSchema.index({ provider: 1 });
+serviceSchema.index({ type: 1, 'event.startDate': 1 });
 
 serviceSchema.pre('validate', function () {
   if (!this.free && this.price?.amount == null) {

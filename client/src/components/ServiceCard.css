@@ -119,6 +119,20 @@
   color: var(--encre-2);
 }
 
+.service-card__dates {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--encre);
+  font-weight: 500;
+}
+
+.service-card__dates svg {
+  flex-shrink: 0;
+  color: var(--service-accent, var(--bleu));
+}
+
 .service-card__description {
   display: -webkit-box;
   overflow: hidden;

@@ -128,7 +128,8 @@ export const services = [
     key: 'djerba-plage',
     type: 'activite',
     name: 'Plage de Sidi Mahrez',
-    description: 'Grande plage de sable fin aux eaux turquoise, idéale pour la baignade et la promenade.',
+    description:
+      'Grande plage de sable fin aux eaux turquoise, idéale pour la baignade et la promenade.',
     destination: 'djerba',
     provider: 'prestataire1',
     location: point(11.005, 33.854),
@@ -146,7 +147,12 @@ export const services = [
     location: point(10.8578, 33.8762),
     address: 'Place du souk, Houmt Souk',
     free: true,
-    event: { startDate: '2026-12-12', endDate: '2026-12-14', hours: '19h – 22h' },
+    event: {
+      eventType: 'Fête locale',
+      startDate: '2026-12-12',
+      endDate: '2026-12-14',
+      hours: '19h – 22h',
+    },
   },
   {
     key: 'djerba-guide',
@@ -206,7 +212,30 @@ export const services = [
     provider: 'prestataire2',
     location: point(8.14, 33.915),
     price: { amount: 25, unit: 'personne' },
-    event: { startDate: '2026-11-20', endDate: '2026-11-20', hours: '20h – 23h' },
+    event: {
+      eventType: 'Spectacle',
+      startDate: '2026-11-20',
+      endDate: '2026-11-20',
+      hours: '20h – 23h',
+    },
+  },
+  {
+    // Événement passé : visible avec un filtre de période antérieur à aujourd'hui.
+    key: 'tozeur-festival',
+    type: 'evenement',
+    name: 'Festival des palmeraies',
+    description: 'Musiques du Sud, marché des artisans et courses de dromadaires.',
+    destination: 'tozeur',
+    provider: 'prestataire2',
+    location: point(8.1345, 33.9178),
+    address: 'Place Ibn Chabbat, Tozeur',
+    price: { amount: 10, unit: 'entrée' },
+    event: {
+      eventType: 'Festival',
+      startDate: '2026-10-16',
+      endDate: '2026-10-18',
+      hours: '10h – 23h',
+    },
   },
   {
     key: 'tozeur-guide',
@@ -263,7 +292,12 @@ export const services = [
     provider: 'prestataire2',
     location: point(10.3409, 36.8701),
     free: true,
-    event: { startDate: '2027-01-09', endDate: '2027-01-09', hours: '17h – 19h' },
+    event: {
+      eventType: 'Concert',
+      startDate: '2027-01-09',
+      endDate: '2027-01-09',
+      hours: '17h – 19h',
+    },
   },
   {
     key: 'sbs-guide',

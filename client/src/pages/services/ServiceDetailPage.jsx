@@ -7,6 +7,7 @@ import {
   Phone,
   Star,
   Store,
+  Tag,
   UtensilsCrossed,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -188,6 +189,9 @@ export default function ServiceDetailPage() {
                 {service.activityCategory && (
                   <span className="service-card__tag legende">{service.activityCategory}</span>
                 )}
+                {service.type === 'evenement' && service.event?.eventType && (
+                  <span className="service-card__tag legende">{service.event.eventType}</span>
+                )}
                 {service.free && (
                   <span className="service-card__free-tag legende">Gratuit</span>
                 )}
@@ -231,6 +235,12 @@ export default function ServiceDetailPage() {
                   {service.event.endDate ? ` au ${formatEventDate(service.event.endDate)}` : ''}
                   {service.event.hours ? ` • ${service.event.hours}` : ''}
                 </p>
+                {service.event.eventType && (
+                  <p className="service-detail__meta-item texte">
+                    <Icon icon={Tag} size={18} />
+                    Type d’événement : {service.event.eventType}
+                  </p>
+                )}
               </div>
             )}
 

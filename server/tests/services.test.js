@@ -218,3 +218,123 @@ describe('US3.2 — GET /api/services/:id', () => {
     expect(res.body.details[0].field).toBe('id');
   });
 });
+describe('US3.4 — GET /api/services?type=evenement', () => {
+  beforeEach(async () => {
+    const base = { type: 'evenement', provider: provider._id, free: true };
+    await Service.create([
+      {
+        ...base,
+        name: 'Festival des palmeraies',
+        destination: djerba._id,
+        location: point(10.86, 33.87),
+        event: { eventType: 'Festival', startDate: '2026-07-12', endDate: '2026-08-20' },
+      },
+      {
+        ...base,
+        name: 'Concert de malouf',
+        destination: tunis._id,
+        location: point(10.34, 36.87),
+        event: { eventType: 'Concert', startDate: '2026-12-05', hours: '18h – 20h' },
+      },
+      {
+        ...base,
+        name: 'Fête de la pêche',
+        destination: djerba._id,
+        location: point(10.85, 33.88),
+        event: { eventType: 'Fête locale', startDate: '2026-11-28', endDate: '2026-11-30' },
+      },
+      {
+        ...base,
+        name: 'Concert masqué',
+        destination: tunis._id,
+        location: point(10.34, 36.87),
+        event: { eventType: 'Concert', startDate: '2026-12-06' },
+        hidden: true,
+      },
+    ]);
+  });
+
+  it('liste les événements par date de début croissante', async () => {
+    const res = await list({ type: 'evenement' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual([
+      'Festival des palmeraies',
+      'Fête de la pêche',
+      'Concert de malouf',
+    ]);
+    expect(res.body.items[0].event).toMatchObject({ eventType: 'Festival' });
+  });
+
+  it('filtre par type d’événement, sans tenir compte de la casse', async () => {
+    const res = await list({ type: 'evenement', eventType: 'concert' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Concert de malouf']);
+
+    const local = await list({ type: 'evenement', eventType: 'Fête locale' });
+    expect(names(local)).toEqual(['Fête de la pêche']);
+  });
+
+  it('filtre par période (dates de début et de fin incluses)', async () => {
+    const res = await list({ type: 'evenement', from: '2026-11-01', to: '2026-12-05' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Fête de la pêche', 'Concert de malouf']);
+  });
+
+  it('garde un événement qui chevauche la période sans y être entièrement compris', async () => {
+    // Le festival dure du 12 juillet au 20 août : il chevauche la période du 1er au 15 août.
+    const during = await list({ type: 'evenement', from: '2026-08-01', to: '2026-08-15' });
+    expect(names(during)).toEqual(['Festival des palmeraies']);
+
+    // Il commence avant « from » et finit pendant la période.
+    const end = await list({ type: 'evenement', from: '2026-08-20' });
+    expect(names(end)).toEqual([
+      'Festival des palmeraies',
+      'Fête de la pêche',
+      'Concert de malouf',
+    ]);
+
+    // Sans date de fin, l'événement ne dure que son jour de début.
+    const after = await list({ type: 'evenement', from: '2026-12-06' });
+    expect(names(after)).toEqual([]);
+
+    const before = await list({ type: 'evenement', to: '2026-07-11' });
+    expect(names(before)).toEqual([]);
+  });
+
+  it('combine type d’événement, période et destination', async () => {
+    const res = await list({
+      type: 'evenement',
+      destination: 'djerba',
+      eventType: 'Festival',
+      from: '2026-01-01',
+      to: '2026-12-31',
+    });
+
+    expect(names(res)).toEqual(['Festival des palmeraies']);
+  });
+
+  it('renvoie 400 si la date de début est postérieure à la date de fin', async () => {
+    const res = await list({ type: 'evenement', from: '2026-12-10', to: '2026-12-01' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details).toEqual([
+      {
+        field: 'to',
+        message: 'La date de fin doit être postérieure ou égale à la date de début.',
+      },
+    ]);
+  });
+
+  it('renvoie 400 si une date est mal formée', async () => {
+    const res = await list({ type: 'evenement', from: '12/10/2026', to: '2026-13-45' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details.map((d) => d.field)).toEqual(['from', 'to']);
+    expect(res.body.details[0].message).toBe(
+      'La date de début doit être une date au format AAAA-MM-JJ.',
+    );
+  });
+});

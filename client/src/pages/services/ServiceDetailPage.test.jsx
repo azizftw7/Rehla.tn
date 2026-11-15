@@ -22,10 +22,7 @@ const SERVICE_DETAIL = {
   free: false,
   ratingAverage: 4.8,
   ratingCount: 12,
-  photos: [
-    'https://placehold.co/800x500?text=Terrasse',
-    'https://placehold.co/800x500?text=Plat',
-  ],
+  photos: ['https://placehold.co/800x500?text=Terrasse', 'https://placehold.co/800x500?text=Plat'],
 }
 
 function renderDetailPage(route = '/services/s1') {
@@ -86,5 +83,39 @@ describe('ServiceDetailPage', () => {
       'href',
       '/services',
     )
+  })
+})
+
+describe('ServiceDetailPage — événement (US3.4)', () => {
+  it('affiche le type d’événement avec les dates et horaires', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse({
+            service: {
+              ...SERVICE_DETAIL,
+              _id: 'e1',
+              type: 'evenement',
+              name: 'Festival des palmeraies',
+              cuisine: undefined,
+              event: {
+                eventType: 'Festival',
+                startDate: '2026-10-16T12:00:00.000Z',
+                endDate: '2026-10-18T12:00:00.000Z',
+                hours: '10h – 23h',
+              },
+            },
+          }),
+        ),
+      ),
+    )
+
+    renderDetailPage('/services/e1')
+
+    expect(await screen.findByRole('heading', { name: 'Dates et horaires' })).toBeInTheDocument()
+    expect(screen.getByText(/10h – 23h/)).toBeInTheDocument()
+    expect(screen.getByText('Type d’événement : Festival')).toBeInTheDocument()
+    expect(screen.getByText('Festival', { selector: '.service-card__tag' })).toBeInTheDocument()
   })
 })

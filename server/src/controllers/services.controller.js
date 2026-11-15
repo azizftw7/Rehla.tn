@@ -6,8 +6,20 @@ import { escapeRegex } from '../utils/text.js';
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
 
 export async function listServices(req, res) {
-  const { type, destination, search, cuisine, activityCategory, free, maxPrice, page, limit } =
-    req.validated.query;
+  const {
+    type,
+    destination,
+    search,
+    cuisine,
+    activityCategory,
+    eventType,
+    from,
+    to,
+    free,
+    maxPrice,
+    page,
+    limit,
+  } = req.validated.query;
 
   const filter = { hidden: false };
 
@@ -44,6 +56,27 @@ export async function listServices(req, res) {
     filter.activityCategory = { $regex: escapeRegex(activityCategory), $options: 'i' };
   }
 
+  if (eventType) {
+    filter['event.eventType'] = { $regex: `^${escapeRegex(eventType)}$`, $options: 'i' };
+  }
+
+  // Un événement correspond à la période s'il la chevauche :
+  // début <= to ET fin (ou début si pas de fin) >= from.
+  if (to) {
+    filter['event.startDate'] = { $lte: to };
+  }
+  if (from) {
+    filter.$and = [
+      ...(filter.$and || []),
+      {
+        $or: [
+          { 'event.endDate': { $gte: from } },
+          { 'event.endDate': null, 'event.startDate': { $gte: from } },
+        ],
+      },
+    ];
+  }
+
   if (free === true) {
     filter.free = true;
   } else if (maxPrice !== undefined) {
@@ -56,7 +89,11 @@ export async function listServices(req, res) {
   const result = await paginate(Service, filter, {
     page,
     limit,
-    sort: { ratingAverage: -1, createdAt: -1 },
+    // Les événements s'affichent dans l'ordre chronologique.
+    sort:
+      type === 'evenement'
+        ? { 'event.startDate': 1, _id: 1 }
+        : { ratingAverage: -1, createdAt: -1 },
     populate: { path: 'destination', select: 'name slug region' },
   });
 

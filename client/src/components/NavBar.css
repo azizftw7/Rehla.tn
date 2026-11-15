@@ -93,6 +93,29 @@
   gap: var(--space-2);
 }
 
+/* Utilisateur connecté : nom (tronqué s'il est long). */
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--encre);
+  font-weight: 500;
+}
+
+.navbar__user svg {
+  flex-shrink: 0;
+  color: var(--bleu);
+}
+
+.navbar__user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @keyframes navbar-ouverture {
   from {
     opacity: 0;
@@ -129,6 +152,15 @@
 
   .navbar__actions {
     display: flex;
+    align-items: center;
+  }
+
+  .navbar__user {
+    padding-inline: var(--space-1);
+  }
+
+  .navbar__user-name {
+    max-width: 16ch;
   }
 
   .navbar__tools {

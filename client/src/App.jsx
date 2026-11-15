@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
+import LoginPage from './pages/auth/LoginPage.jsx'
+import RegisterPage from './pages/auth/RegisterPage.jsx'
 import CrashTestPage from './pages/dev/CrashTestPage.jsx'
 import DestinationPage from './pages/destinations/DestinationPage.jsx'
 import DestinationsPage from './pages/destinations/DestinationsPage.jsx'
@@ -17,6 +19,8 @@ export default function App() {
         <Route path="destinations/:slug" element={<DestinationPage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="services/:id" element={<ServiceDetailPage />} />
+        <Route path="connexion" element={<LoginPage />} />
+        <Route path="inscription" element={<RegisterPage />} />
         {import.meta.env.DEV && <Route path="test-erreur" element={<CrashTestPage />} />}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

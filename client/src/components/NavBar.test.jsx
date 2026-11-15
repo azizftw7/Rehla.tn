@@ -2,9 +2,67 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { AuthProvider } from '../context/AuthContext.jsx'
 import { THEME_STORAGE_KEY } from '../hooks/useTheme.js'
-import { LocationDisplay, mockSystemTheme, renderWithRouter } from '../test/utils.jsx'
+import { TOKEN_STORAGE_KEY } from '../lib/api.js'
+import {
+  jsonResponse,
+  LocationDisplay,
+  mockApi,
+  mockSystemTheme,
+  renderWithRouter,
+} from '../test/utils.jsx'
 import NavBar from './NavBar.jsx'
+
+/** NavBar avec un utilisateur connecté (session rechargée depuis /users/me). */
+function renderConnected(user) {
+  localStorage.setItem(TOKEN_STORAGE_KEY, 'jeton')
+  mockApi({ 'GET /users/me': () => jsonResponse({ user }) })
+  return render(
+    <AuthProvider>
+      <MemoryRouter>
+        <NavBar />
+      </MemoryRouter>
+    </AuthProvider>,
+  )
+}
+
+describe('NavBar — utilisateur connecté', () => {
+  it('remplace Connexion / Inscription par le nom et « Déconnexion »', async () => {
+    renderConnected({ _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' })
+
+    expect(await screen.findByText('Amel Trabelsi')).toBeInTheDocument()
+    expect(screen.getByText(/Connecté en tant que/)).toHaveClass('visually-hidden')
+    expect(screen.getByRole('button', { name: 'Déconnexion' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Inscription' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Espace prestataire' })).not.toBeInTheDocument()
+  })
+
+  it('propose l’espace prestataire à un prestataire', async () => {
+    renderConnected({ _id: 'p1', name: 'Karim Jlassi', role: 'prestataire' })
+
+    expect(await screen.findByRole('link', { name: 'Espace prestataire' })).toHaveAttribute(
+      'href',
+      '/prestataire/services',
+    )
+  })
+
+  it('déconnecte l’utilisateur (y compris depuis le menu mobile)', async () => {
+    const user = userEvent.setup()
+    renderConnected({ _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' })
+    await screen.findByText('Amel Trabelsi')
+
+    const burger = screen.getByRole('button', { name: 'Ouvrir le menu' })
+    await user.click(burger)
+    await user.click(screen.getByRole('button', { name: 'Déconnexion' }))
+
+    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull()
+    expect(burger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/connexion')
+    expect(screen.queryByText('Amel Trabelsi')).not.toBeInTheDocument()
+  })
+})
 
 const html = document.documentElement
 

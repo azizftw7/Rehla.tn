@@ -68,13 +68,13 @@ afterEach(() => {
 
 describe('ServicesPage', () => {
   it('affiche les cartes de restaurants avec prix, note et destination', async () => {
-    mockServicesApi([
-      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
-    ])
+    mockServicesApi([jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 })])
 
     renderServicesPage('/services?type=restaurant')
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Restaurants' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Restaurants' }),
+    ).toBeInTheDocument()
     const cards = await screen.findAllByRole('article')
     expect(cards).toHaveLength(2)
 
@@ -128,5 +128,201 @@ describe('ServicesPage', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Impossible de charger les services')
     expect(alert).toHaveTextContent('Impossible de joindre le serveur.')
+  })
+})
+const EVENTS = [
+  {
+    _id: 'e1',
+    type: 'evenement',
+    name: 'Festival des palmeraies',
+    destination: { name: 'Tozeur', slug: 'tozeur' },
+    free: false,
+    price: { amount: 10, unit: 'entrée' },
+    event: {
+      eventType: 'Festival',
+      startDate: '2026-07-12T00:00:00.000Z',
+      endDate: '2026-08-20T00:00:00.000Z',
+    },
+    ratingAverage: 0,
+    ratingCount: 0,
+    photos: [],
+  },
+]
+
+describe('ServicesPage — événements (US3.4)', () => {
+  it('affiche les dates et le type de l’événement sur la carte', async () => {
+    mockServicesApi([jsonResponse({ items: EVENTS, total: 1, page: 1, pages: 1 })])
+    renderServicesPage('/services?type=evenement')
+
+    const [card] = await screen.findAllByRole('article')
+    expect(within(card).getByText('Du 12 juil. au 20 août 2026')).toBeInTheDocument()
+    expect(within(card).getByText('Festival')).toBeInTheDocument()
+  })
+
+  it('n’affiche les filtres d’événement que sur l’onglet Événements', async () => {
+    const user = userEvent.setup()
+    mockServicesApi([
+      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
+      jsonResponse({ items: EVENTS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=restaurant')
+    await screen.findAllByRole('article')
+
+    expect(screen.queryByLabelText('Type d’événement')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Du')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Événements' }))
+
+    expect(screen.getByLabelText('Type d’événement')).toBeInTheDocument()
+    expect(screen.getByLabelText('Du')).toHaveAttribute('type', 'date')
+    expect(screen.getByLabelText('Au')).toHaveAttribute('type', 'date')
+  })
+
+  it('envoie le type d’événement et la période à l’API et les garde dans l’URL', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: EVENTS, total: 1, page: 1, pages: 1 }),
+      jsonResponse({ items: EVENTS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=evenement&from=2026-07-01&to=2026-08-31')
+    await screen.findAllByRole('article')
+
+    expect(screen.getByLabelText('Du')).toHaveValue('2026-07-01')
+    expect(screen.getByLabelText('Au')).toHaveValue('2026-08-31')
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringMatching(/type=evenement.*from=2026-07-01&to=2026-08-31/),
+      expect.any(Object),
+    )
+
+    await user.selectOptions(screen.getByLabelText('Type d’événement'), 'Festival')
+
+    expect(screen.getByLabelText('Type d’événement')).toHaveValue('Festival')
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('eventType=Festival'),
+      expect.any(Object),
+    )
+  })
+
+  it('signale une période inversée sans l’envoyer à l’API', async () => {
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: EVENTS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=evenement&from=2026-12-10&to=2026-12-01')
+    await screen.findAllByRole('article')
+
+    expect(screen.getByLabelText('Au')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('La date de fin doit être après la date de début.')).toBeInTheDocument()
+    const url = fetchMock.mock.calls.at(-1)[0]
+    expect(url).toContain('from=2026-12-10')
+    expect(url).not.toContain('to=')
+  })
+
+  it('ignore les filtres d’événement sur les autres onglets', async () => {
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=restaurant&eventType=Concert&from=2026-12-01')
+    await screen.findAllByRole('article')
+
+    const url = fetchMock.mock.calls.at(-1)[0]
+    expect(url).not.toContain('eventType')
+    expect(url).not.toContain('from=')
+  })
+
+  it('relance vraiment la requête avec « Réessayer »', async () => {
+    const user = userEvent.setup()
+    mockServicesApi([
+      new TypeError('Failed to fetch'),
+      jsonResponse({ items: EVENTS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=evenement')
+
+    const alert = await screen.findByRole('alert')
+    await user.click(within(alert).getByRole('button', { name: 'Réessayer' }))
+
+    expect(await screen.findAllByRole('article')).toHaveLength(1)
+  })
+})
+
+const LODGINGS = [
+  {
+    _id: 'h1',
+    type: 'hebergement',
+    name: 'Menzel des Palmes Bleues',
+    accommodationType: 'maison-hotes',
+    destination: { name: 'Djerba', slug: 'djerba' },
+    price: { amount: 180, unit: 'nuit' },
+    free: false,
+    ratingAverage: 4.5,
+    ratingCount: 2,
+    photos: [],
+  },
+]
+
+describe('ServicesPage — hébergements (US3.1)', () => {
+  it('affiche le type d’hébergement en badge sur la carte', async () => {
+    mockServicesApi([jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 })])
+    renderServicesPage('/services?type=hebergement')
+
+    const [card] = await screen.findAllByRole('article')
+    expect(within(card).getByText('Maison d’hôtes')).toHaveClass('service-card__tag')
+  })
+
+  it('n’affiche le filtre « Type d’hébergement » que sur l’onglet Hébergements', async () => {
+    const user = userEvent.setup()
+    mockServicesApi([
+      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
+      jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=restaurant')
+    await screen.findAllByRole('article')
+
+    expect(screen.queryByLabelText('Type d’hébergement')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Hébergements' }))
+
+    const select = screen.getByLabelText('Type d’hébergement')
+    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Tous les types',
+      'Hôtel',
+      'Maison d’hôtes',
+      'Dar',
+      'Appartement',
+      'Camping',
+    ])
+  })
+
+  it('synchronise le type d’hébergement avec l’URL et l’envoie à l’API', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 }),
+      jsonResponse({ items: LODGINGS, total: 1, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=hebergement&accommodationType=dar')
+    await screen.findAllByRole('article')
+
+    expect(screen.getByLabelText('Type d’hébergement')).toHaveValue('dar')
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('accommodationType=dar'),
+      expect.any(Object),
+    )
+
+    await user.selectOptions(screen.getByLabelText('Type d’hébergement'), 'maison-hotes')
+
+    expect(screen.getByLabelText('Type d’hébergement')).toHaveValue('maison-hotes')
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('accommodationType=maison-hotes'),
+      expect.any(Object),
+    )
+  })
+
+  it('ignore le type d’hébergement sur les autres onglets', async () => {
+    const fetchMock = mockServicesApi([
+      jsonResponse({ items: RESTAURANTS, total: 2, page: 1, pages: 1 }),
+    ])
+    renderServicesPage('/services?type=restaurant&accommodationType=dar')
+    await screen.findAllByRole('article')
+
+    expect(fetchMock.mock.calls.at(-1)[0]).not.toContain('accommodationType')
   })
 })

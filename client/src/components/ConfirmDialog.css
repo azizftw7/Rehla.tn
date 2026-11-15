@@ -1,0 +1,99 @@
+/* Boîte de confirmation modale. Mobile d'abord ; 768px = --bp-md. */
+
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modale);
+  display: grid;
+  place-items: end center;
+  padding: var(--space-4);
+  background: var(--voile);
+  animation: confirm-dialog-voile var(--duree-base) var(--ease-standard);
+}
+
+.confirm-dialog__panel {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  color: var(--encre);
+  box-shadow: var(--shadow-lg);
+  animation: confirm-dialog-panneau var(--duree-base) var(--ease-sortie);
+}
+
+.confirm-dialog__panel:focus {
+  outline: none;
+}
+
+.confirm-dialog__title {
+  margin: 0;
+}
+
+.confirm-dialog__text {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--encre-2);
+}
+
+.confirm-dialog__text p {
+  margin: 0;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+}
+
+/* Action destructive : couleur « danger » du design system. */
+.confirm-dialog__confirm.btn--primary {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.confirm-dialog__confirm.btn--primary:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger) 85%, var(--encre));
+  background: color-mix(in srgb, var(--danger) 85%, var(--encre));
+  box-shadow: var(--shadow-md);
+}
+
+@keyframes confirm-dialog-voile {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes confirm-dialog-panneau {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-4));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-dialog,
+  .confirm-dialog__panel {
+    animation: none;
+  }
+}
+
+/* Tablette (768px = --bp-md) : boîte centrée, boutons côte à côte. */
+@media (min-width: 768px) {
+  .confirm-dialog {
+    place-items: center;
+  }
+
+  .confirm-dialog__panel {
+    padding: var(--space-8);
+  }
+
+  .confirm-dialog__actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}

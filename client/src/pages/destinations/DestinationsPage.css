@@ -1,0 +1,180 @@
+.destinations-page {
+  padding-block: var(--space-8) var(--space-16);
+}
+
+.destinations-page__header {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+/* ---------- Carte + recherche ---------- */
+
+/* Mobile : recherche, puis carte (puis la grille, en dessous). */
+.destinations-page__explorer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'panel'
+    'map';
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+/* Ordinateur (1024px = --bp-lg) : carte à gauche (2fr), recherche à droite (1fr). */
+@media (min-width: 1024px) {
+  .destinations-page__explorer {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas: 'map panel';
+    align-items: start;
+  }
+}
+
+.destinations-page__map {
+  grid-area: map;
+  scroll-margin-top: calc(var(--space-16) + var(--space-4));
+}
+
+.destinations-page__map-placeholder {
+  height: 360px;
+  border-radius: var(--radius-lg);
+}
+
+/* Ordinateur (1024px = --bp-lg) */
+@media (min-width: 1024px) {
+  .destinations-page__map-placeholder {
+    height: 480px;
+  }
+}
+
+/* Bloc de recherche : même cadre que les filtres de ServicesPage. */
+.destinations-page__panel {
+  grid-area: panel;
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.destinations-page__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.destinations-page__field {
+  flex: 1 1 200px;
+}
+
+.destinations-page__search button[type='submit'] {
+  height: 40px;
+}
+
+/* ---------- Liste compacte des destinations trouvées ---------- */
+
+.destinations-page__found {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--trait);
+}
+
+.destinations-page__found-title {
+  margin: 0;
+  color: var(--encre);
+}
+
+.destinations-page__found-title .legende {
+  color: var(--encre-2);
+}
+
+.destinations-page__found-note {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--encre-2);
+}
+
+.destinations-page__found-list {
+  display: grid;
+  gap: var(--space-1);
+  max-height: 240px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+/* Ordinateur (1024px = --bp-lg) : la liste occupe la hauteur restante à côté de la carte. */
+@media (min-width: 1024px) {
+  .destinations-page__found-list {
+    max-height: 300px;
+  }
+}
+
+.destinations-page__found-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--encre);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--duree-base) var(--ease-standard),
+    border-color var(--duree-base) var(--ease-standard);
+}
+
+.destinations-page__found-item > svg {
+  flex-shrink: 0;
+  color: var(--bleu);
+}
+
+.destinations-page__found-item:hover {
+  background: var(--surface-alt);
+}
+
+.destinations-page__found-item[aria-pressed='true'] {
+  border-color: var(--bleu);
+  background: var(--bleu-pale);
+}
+
+.destinations-page__found-name {
+  font-weight: 500;
+}
+
+.destinations-page__found-region {
+  margin-left: auto;
+  color: var(--encre-2);
+}
+
+/* ---------- Grille ---------- */
+
+.destinations-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.destinations-page__grid > li {
+  display: grid;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .destinations-page__found-item {
+    transition: none;
+  }
+}

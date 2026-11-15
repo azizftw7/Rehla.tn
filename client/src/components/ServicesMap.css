@@ -1,0 +1,33 @@
+/* Carte des services d'une destination (cadre, marqueurs et thème : MapFrame.css). */
+
+/* Ordinateur (1024px = --bp-lg) */
+@media (min-width: 1024px) {
+  .services-map .map-frame__canvas {
+    height: 560px;
+  }
+}
+
+.services-map__popup {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 160px;
+}
+
+.services-map__popup-category {
+  color: var(--marker-color, var(--bleu));
+  font-weight: 600;
+}
+
+.services-map__popup-name {
+  font-family: var(--font-display);
+  color: var(--encre);
+}
+
+.services-map__popup-price {
+  color: var(--encre-2);
+}
+
+.services-map .services-map__popup-link {
+  color: var(--bleu);
+  font-weight: 500;
+}

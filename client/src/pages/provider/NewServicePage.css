@@ -1,0 +1,271 @@
+/* Page « Publier un service ». Mobile d'abord ; 768px = --bp-md, 1024px = --bp-lg.
+   Champs, onglets et alertes : classes du catalogue et des pages Connexion / Inscription
+   (.services-page__input, .services-page__tab, .auth-form…). */
+
+.nouveau-service {
+  padding-block: var(--space-8) var(--space-16);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--chaux) 100%);
+}
+
+.nouveau-service__inner {
+  max-width: 880px;
+}
+
+.nouveau-service__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  color: var(--bleu);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.nouveau-service__back:hover {
+  text-decoration: underline;
+}
+
+.nouveau-service__surtitre {
+  color: var(--bougainvillier);
+  text-transform: uppercase;
+}
+
+.nouveau-service__intro {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+/* Le formulaire est une carte, comme sur les pages Connexion / Inscription. */
+.nouveau-service__form {
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+/* Chargement du service à modifier (US6.2). */
+.nouveau-service__loading {
+  display: grid;
+}
+
+#service-erreur-generale:empty {
+  display: none;
+}
+
+#service-erreur-generale:focus {
+  outline: none;
+}
+
+/* ---------- Sections ---------- */
+
+.nouveau-service__section {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-5) 0 0;
+  border: 0;
+  border-top: 1px solid var(--trait);
+}
+
+.nouveau-service__section:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.nouveau-service__section legend {
+  padding: 0 0 var(--space-3);
+  color: var(--encre);
+}
+
+.nouveau-service__tabs {
+  margin-bottom: 0;
+}
+
+.nouveau-service__tabs:focus {
+  outline: none;
+}
+
+.nouveau-service__form textarea.services-page__input {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.nouveau-service__inline-alert {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+/* ---------- Photos ---------- */
+
+/* Le vrai champ fichier reste accessible au clavier mais invisible : son libellé sert de zone. */
+.nouveau-service__file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nouveau-service__upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 120px;
+  padding: var(--space-5);
+  border: 2px dashed var(--trait-fort);
+  border-radius: var(--radius-lg);
+  background: var(--chaux);
+  color: var(--bleu);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--duree-base) var(--ease-standard),
+    background-color var(--duree-base) var(--ease-standard);
+}
+
+.nouveau-service__upload:hover {
+  border-color: var(--bleu);
+  background: var(--bleu-pale);
+}
+
+.services-page__field:has(.nouveau-service__file:focus-visible) .nouveau-service__upload {
+  border-color: var(--bleu);
+  box-shadow: var(--focus-ring);
+}
+
+.services-page__field:has(.nouveau-service__file[aria-invalid='true']) .nouveau-service__upload {
+  border-color: var(--danger);
+}
+
+.services-page__field:has(.nouveau-service__file:disabled) .nouveau-service__upload {
+  border-color: var(--trait);
+  background: var(--surface-alt);
+  color: var(--encre-2);
+  cursor: not-allowed;
+}
+
+.nouveau-service__photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nouveau-service__photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-md);
+  background: var(--surface-alt);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--duree-base) var(--ease-standard),
+    box-shadow var(--duree-base) var(--ease-standard);
+}
+
+.nouveau-service__photo:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.nouveau-service__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nouveau-service__photo-name {
+  padding: var(--space-2);
+  color: var(--encre-2);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.nouveau-service__cover {
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--service-accent, var(--bleu));
+  color: var(--on-bleu);
+  font-weight: 600;
+}
+
+.nouveau-service__remove {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--encre);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--duree-base) var(--ease-standard),
+    color var(--duree-base) var(--ease-standard);
+}
+
+.nouveau-service__remove:hover {
+  background: var(--danger-pale);
+  color: var(--danger);
+}
+
+.nouveau-service__remove:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Position ---------- */
+
+.nouveau-service__map-placeholder {
+  height: 280px;
+  border-radius: var(--radius-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nouveau-service__upload,
+  .nouveau-service__photo,
+  .nouveau-service__remove {
+    transition: none;
+  }
+
+  .nouveau-service__photo:hover {
+    transform: none;
+  }
+}
+
+/* Tablette (768px = --bp-md) */
+@media (min-width: 768px) {
+  .nouveau-service__form {
+    padding: var(--space-8);
+  }
+
+  .nouveau-service__map-placeholder {
+    height: 340px;
+  }
+}
+
+/* Ordinateur (1024px = --bp-lg) */
+@media (min-width: 1024px) {
+  .nouveau-service {
+    padding-block: var(--space-12) var(--space-24);
+  }
+}

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../src/app.js';
-import { Destination, Service, User } from '../src/models/index.js';
+import { Destination, Offer, Service, User } from '../src/models/index.js';
 
 const point = (lng, lat) => ({ type: 'Point', coordinates: [lng, lat] });
 const list = (query) => request(app).get('/api/services').query(query);
@@ -216,5 +216,271 @@ describe('US3.2 — GET /api/services/:id', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.details[0].field).toBe('id');
+  });
+});
+describe('US3.4 — GET /api/services?type=evenement', () => {
+  beforeEach(async () => {
+    const base = { type: 'evenement', provider: provider._id, free: true };
+    await Service.create([
+      {
+        ...base,
+        name: 'Festival des palmeraies',
+        destination: djerba._id,
+        location: point(10.86, 33.87),
+        event: { eventType: 'Festival', startDate: '2026-07-12', endDate: '2026-08-20' },
+      },
+      {
+        ...base,
+        name: 'Concert de malouf',
+        destination: tunis._id,
+        location: point(10.34, 36.87),
+        event: { eventType: 'Concert', startDate: '2026-12-05', hours: '18h – 20h' },
+      },
+      {
+        ...base,
+        name: 'Fête de la pêche',
+        destination: djerba._id,
+        location: point(10.85, 33.88),
+        event: { eventType: 'Fête locale', startDate: '2026-11-28', endDate: '2026-11-30' },
+      },
+      {
+        ...base,
+        name: 'Concert masqué',
+        destination: tunis._id,
+        location: point(10.34, 36.87),
+        event: { eventType: 'Concert', startDate: '2026-12-06' },
+        hidden: true,
+      },
+    ]);
+  });
+
+  it('liste les événements par date de début croissante', async () => {
+    const res = await list({ type: 'evenement' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual([
+      'Festival des palmeraies',
+      'Fête de la pêche',
+      'Concert de malouf',
+    ]);
+    expect(res.body.items[0].event).toMatchObject({ eventType: 'Festival' });
+  });
+
+  it('filtre par type d’événement, sans tenir compte de la casse', async () => {
+    const res = await list({ type: 'evenement', eventType: 'concert' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Concert de malouf']);
+
+    const local = await list({ type: 'evenement', eventType: 'Fête locale' });
+    expect(names(local)).toEqual(['Fête de la pêche']);
+  });
+
+  it('filtre par période (dates de début et de fin incluses)', async () => {
+    const res = await list({ type: 'evenement', from: '2026-11-01', to: '2026-12-05' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Fête de la pêche', 'Concert de malouf']);
+  });
+
+  it('garde un événement qui chevauche la période sans y être entièrement compris', async () => {
+    // Le festival dure du 12 juillet au 20 août : il chevauche la période du 1er au 15 août.
+    const during = await list({ type: 'evenement', from: '2026-08-01', to: '2026-08-15' });
+    expect(names(during)).toEqual(['Festival des palmeraies']);
+
+    // Il commence avant « from » et finit pendant la période.
+    const end = await list({ type: 'evenement', from: '2026-08-20' });
+    expect(names(end)).toEqual([
+      'Festival des palmeraies',
+      'Fête de la pêche',
+      'Concert de malouf',
+    ]);
+
+    // Sans date de fin, l'événement ne dure que son jour de début.
+    const after = await list({ type: 'evenement', from: '2026-12-06' });
+    expect(names(after)).toEqual([]);
+
+    const before = await list({ type: 'evenement', to: '2026-07-11' });
+    expect(names(before)).toEqual([]);
+  });
+
+  it('combine type d’événement, période et destination', async () => {
+    const res = await list({
+      type: 'evenement',
+      destination: 'djerba',
+      eventType: 'Festival',
+      from: '2026-01-01',
+      to: '2026-12-31',
+    });
+
+    expect(names(res)).toEqual(['Festival des palmeraies']);
+  });
+
+  it('renvoie 400 si la date de début est postérieure à la date de fin', async () => {
+    const res = await list({ type: 'evenement', from: '2026-12-10', to: '2026-12-01' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details).toEqual([
+      {
+        field: 'to',
+        message: 'La date de fin doit être postérieure ou égale à la date de début.',
+      },
+    ]);
+  });
+
+  it('renvoie 400 si une date est mal formée', async () => {
+    const res = await list({ type: 'evenement', from: '12/10/2026', to: '2026-13-45' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details.map((d) => d.field)).toEqual(['from', 'to']);
+    expect(res.body.details[0].message).toBe(
+      'La date de début doit être une date au format AAAA-MM-JJ.',
+    );
+  });
+});
+
+describe('US3.1 — hébergements', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const daysFromNow = (days) => new Date(Date.now() + days * DAY);
+  let dar;
+
+  beforeEach(async () => {
+    const base = { type: 'hebergement', provider: provider._id, destination: tunis._id };
+    [dar] = await Service.create([
+      {
+        ...base,
+        name: 'Dar El Jasmin',
+        accommodationType: 'dar',
+        location: point(10.341, 36.869),
+        price: { amount: 240, unit: 'nuit' },
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ratingAverage: 4.9,
+      },
+      {
+        ...base,
+        name: 'Hôtel du Golfe',
+        accommodationType: 'hotel',
+        location: point(10.345, 36.87),
+        price: { amount: 180, unit: 'nuit' },
+        ratingAverage: 4.2,
+      },
+      {
+        ...base,
+        name: 'Camping des Pins',
+        accommodationType: 'camping',
+        destination: djerba._id,
+        location: point(10.86, 33.88),
+        price: { amount: 30, unit: 'nuit' },
+      },
+    ]);
+  });
+
+  it('liste les hébergements et filtre par type d’hébergement', async () => {
+    const all = await list({ type: 'hebergement' });
+    expect(all.status).toBe(200);
+    expect(names(all)).toEqual(['Dar El Jasmin', 'Hôtel du Golfe', 'Camping des Pins']);
+
+    const dars = await list({ type: 'hebergement', accommodationType: 'dar' });
+    expect(names(dars)).toEqual(['Dar El Jasmin']);
+    expect(dars.body.items[0].accommodationType).toBe('dar');
+
+    const combined = await list({
+      type: 'hebergement',
+      accommodationType: 'camping',
+      destination: 'djerba',
+    });
+    expect(names(combined)).toEqual(['Camping des Pins']);
+  });
+
+  it('renvoie 400 avec un message en français si le type d’hébergement est inconnu', async () => {
+    const res = await list({ type: 'hebergement', accommodationType: 'chateau' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details).toEqual([
+      {
+        field: 'accommodationType',
+        message: "Type d'hébergement invalide (hotel, maison-hotes, dar, appartement ou camping).",
+      },
+    ]);
+  });
+
+  it('refuse un type d’hébergement sur un service qui n’est pas un hébergement', async () => {
+    await expect(
+      Service.create({
+        type: 'restaurant',
+        name: 'Restaurant test',
+        accommodationType: 'hotel',
+        destination: tunis._id,
+        provider: provider._id,
+        location: point(10.34, 36.86),
+        price: { amount: 20 },
+      }),
+    ).rejects.toThrow("Le type d'hébergement ne concerne que les hébergements.");
+  });
+
+  it('renvoie la fiche avec la vidéo, la localisation et uniquement les offres en cours', async () => {
+    await Offer.create([
+      {
+        service: dar._id,
+        title: 'Week-end en amoureux',
+        discountedPrice: 199,
+        startDate: daysFromNow(-2),
+        endDate: daysFromNow(10),
+      },
+      {
+        service: dar._id,
+        title: 'Séjour long : -20 %',
+        discountPercent: 20,
+        startDate: daysFromNow(-30),
+        endDate: daysFromNow(3),
+      },
+      {
+        service: dar._id,
+        title: 'Offre expirée',
+        discountPercent: 10,
+        startDate: daysFromNow(-60),
+        endDate: daysFromNow(-1),
+      },
+      {
+        service: dar._id,
+        title: 'Offre à venir',
+        discountPercent: 10,
+        startDate: daysFromNow(5),
+        endDate: daysFromNow(20),
+      },
+      {
+        service: visibleRestaurant._id,
+        title: 'Offre d’un autre service',
+        discountPercent: 5,
+        startDate: daysFromNow(-1),
+        endDate: daysFromNow(1),
+      },
+    ]);
+
+    const res = await request(app).get(`/api/services/${dar._id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.service).toMatchObject({
+      name: 'Dar El Jasmin',
+      accommodationType: 'dar',
+      videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      price: { amount: 240, unit: 'nuit' },
+      location: { type: 'Point', coordinates: [10.341, 36.869] },
+    });
+    // Triées par date de fin croissante (celle qui se termine le plus tôt d'abord).
+    expect(res.body.offers.map((o) => o.title)).toEqual([
+      'Séjour long : -20 %',
+      'Week-end en amoureux',
+    ]);
+    expect(res.body.offers[0]).toMatchObject({ discountPercent: 20 });
+    expect(res.body.offers[1]).toMatchObject({ discountedPrice: 199 });
+    expect(res.body.offers[0]).not.toHaveProperty('service');
+  });
+
+  it('renvoie une liste d’offres vide si le service n’en a aucune en cours', async () => {
+    const res = await request(app).get(`/api/services/${dar._id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.offers).toEqual([]);
   });
 });

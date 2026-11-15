@@ -1,0 +1,195 @@
+/* Pages Connexion et Inscription. Mobile d'abord ; 768px = --bp-md, 1024px = --bp-lg.
+   Champs et onglets : classes du catalogue (.services-page__input, .services-page__tab…). */
+
+.auth-page {
+  padding-block: var(--space-8) var(--space-16);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--chaux) 100%);
+  overflow: hidden;
+}
+
+.auth-page__inner {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.auth-page__card {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-page__header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.auth-page__surtitre {
+  color: var(--bougainvillier);
+  text-transform: uppercase;
+}
+
+.auth-page__intro {
+  color: var(--encre-2);
+}
+
+.auth-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* L'illustration n'apparaît que sur ordinateur, à côté du formulaire. */
+.auth-page__illustration {
+  display: none;
+}
+
+/* ---------- Formulaire ---------- */
+
+.auth-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auth-form__label {
+  color: var(--encre);
+}
+
+.auth-form__hint {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+.auth-form__group {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--trait);
+}
+
+.auth-form__group legend {
+  padding: 0 0 var(--space-2);
+  color: var(--encre);
+}
+
+.auth-form__row {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auth-form__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--danger-pale);
+  color: var(--danger);
+}
+
+.auth-form__alert p {
+  margin: 0;
+}
+
+.auth-form__alert svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Mot de passe : le bouton œil est posé dans le champ. */
+.auth-form__password {
+  position: relative;
+}
+
+.auth-form__password .services-page__input {
+  padding-right: calc(var(--space-3) + var(--space-8));
+}
+
+.auth-form__toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-1);
+  display: inline-grid;
+  place-items: center;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--encre-2);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background-color var(--duree-base) var(--ease-standard),
+    color var(--duree-base) var(--ease-standard);
+}
+
+.auth-form__toggle:hover {
+  background: var(--surface-alt);
+  color: var(--encre);
+}
+
+.auth-form__submit {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.auth-form__switch {
+  margin: 0;
+  text-align: center;
+  color: var(--encre-2);
+}
+
+.auth-form__switch a {
+  color: var(--bleu);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form__toggle {
+    transition: none;
+  }
+}
+
+/* Tablette (768px = --bp-md) */
+@media (min-width: 768px) {
+  .auth-page__card {
+    padding: var(--space-8);
+  }
+
+  .auth-form__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Ordinateur (1024px = --bp-lg) */
+@media (min-width: 1024px) {
+  .auth-page {
+    padding-block: var(--space-12) var(--space-24);
+  }
+
+  .auth-page__inner {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-16);
+  }
+
+  .auth-page__card {
+    margin-inline: 0;
+    justify-self: end;
+  }
+
+  .auth-page__illustration {
+    display: block;
+    max-width: 380px;
+  }
+}

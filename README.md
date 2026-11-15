@@ -72,7 +72,7 @@ Si le mot de passe contient des caractères spéciaux (`@`, `:`, `/`…), les en
 npm run seed
 ```
 
-⚠️ Le seed **vide toutes les collections** de la base indiquée puis crée : 3 destinations (Djerba, Tozeur, Sidi Bou Saïd), 15 services (tous types), des offres, des avis, des transports et les comptes ci-dessous. Il refuse de s'exécuter si `NODE_ENV=production`.
+⚠️ Le seed **vide toutes les collections** de la base indiquée puis crée : 3 destinations (Djerba, Tozeur, Sidi Bou Saïd), 16 services (tous types, dont 4 événements), des offres, des avis, des transports et les comptes ci-dessous. Il refuse de s'exécuter si `NODE_ENV=production`.
 
 Comptes de démo (**développement uniquement**) — le mot de passe de chacun est la valeur de `SEED_DEMO_PASSWORD` de votre `.env` :
 

@@ -1,21 +1,36 @@
 import {
   ArrowLeft,
   CalendarDays,
+  CircleCheck,
   Globe,
   Languages,
   MapPin,
+  Percent,
   Phone,
+  PlayCircle,
   Star,
   Store,
+  Tag,
   UtensilsCrossed,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
+import { getAccommodationLabel } from '../../data/accommodationTypes.js'
 import { CATEGORIES } from '../../data/categories.js'
-import { fetchServiceById, formatServicePrice } from '../../lib/servicesApi.js'
+import { toLatLng } from '../../lib/destinationsApi.js'
+import {
+  fetchServiceById,
+  formatOfferDiscount,
+  formatOfferEnd,
+  formatServicePrice,
+  getYoutubeEmbedUrl,
+} from '../../lib/servicesApi.js'
 import './ServiceDetailPage.css'
+
+// Leaflet n'est chargé que si la fiche a une localisation.
+const ServicesMap = lazy(() => import('../../components/ServicesMap.jsx'))
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
 
@@ -79,31 +94,115 @@ function ServiceGallery({ photos, serviceName, CategoryIcon }) {
   )
 }
 
+function ServiceOffers({ offers }) {
+  return (
+    <div className="service-detail__section">
+      <h2 className="titre-3">Offres en cours</h2>
+      <ul className="service-detail__offers">
+        {offers.map((offer) => {
+          const discount = formatOfferDiscount(offer)
+          const end = formatOfferEnd(offer)
+          return (
+            <li key={offer._id} className="service-detail__offer">
+              <span className="service-detail__offer-icon" aria-hidden="true">
+                <Icon icon={Percent} size={18} />
+              </span>
+              <div className="service-detail__offer-body">
+                <p className="service-detail__offer-title texte">{offer.title}</p>
+                {end && (
+                  <p className="legende" style={{ color: 'var(--encre-2)' }}>
+                    {end}
+                  </p>
+                )}
+              </div>
+              {discount && (
+                <span className="service-detail__offer-discount legende">
+                  {offer.discountPercent == null && 'Prix réduit : '}
+                  {discount}
+                </span>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function ServiceVideo({ videoUrl, serviceName }) {
+  const embedUrl = getYoutubeEmbedUrl(videoUrl)
+  return (
+    <div className="service-detail__section">
+      <h2 className="titre-3">Vidéo</h2>
+      {embedUrl ? (
+        <div className="service-detail__video">
+          <iframe
+            src={embedUrl}
+            title={`Vidéo de présentation — ${serviceName}`}
+            loading="lazy"
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+      ) : (
+        <p className="texte">
+          <a
+            href={videoUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="service-detail__video-link"
+          >
+            <Icon icon={PlayCircle} size={18} />
+            Voir la vidéo
+          </a>
+        </p>
+      )}
+    </div>
+  )
+}
+
+function MapPlaceholder() {
+  return <div className="service-detail__map-placeholder skeleton" aria-hidden="true" />
+}
+
 export default function ServiceDetailPage() {
   const { id } = useParams()
+  // Message passé par la page précédente (ex. « … est publié » après la création).
+  const notice = useLocation().state?.notice
+  const [reload, setReload] = useState(0)
   const [requestState, setRequestState] = useState({
-    fetchedId: null,
+    fetchedKey: null,
     service: null,
+    offers: [],
     error: null,
   })
+  const requestKey = `${id}:${reload}`
 
   useEffect(() => {
     const controller = new AbortController()
 
     fetchServiceById(id, { signal: controller.signal })
       .then((res) => {
-        setRequestState({ fetchedId: id, service: res.service, error: null })
+        setRequestState({
+          fetchedKey: requestKey,
+          service: res.service,
+          offers: res.offers || [],
+          error: null,
+        })
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
-        setRequestState({ fetchedId: id, service: null, error: err })
+        setRequestState({ fetchedKey: requestKey, service: null, offers: [], error: err })
       })
 
     return () => controller.abort()
-  }, [id])
+  }, [id, requestKey])
 
-  const loading = requestState.fetchedId !== id
-  const { service, error } = requestState
+  const loading = requestState.fetchedKey !== requestKey
+  const { service, offers, error } = requestState
+  // Tableau stable : la mini-carte ne se recadre pas à chaque rendu.
+  const mapServices = useMemo(() => (service ? [service] : []), [service])
 
   if (loading) {
     return (
@@ -139,9 +238,16 @@ export default function ServiceDetailPage() {
             <p className="texte" style={{ color: 'var(--encre-2)' }}>
               {error?.message || 'Cette adresse n’est plus disponible ou le lien est incorrect.'}
             </p>
-            <Button to="/services" variant="primary">
-              Retour au catalogue
-            </Button>
+            <div className="service-detail__state-actions">
+              {!isNotFound && (
+                <Button type="button" variant="primary" onClick={() => setReload((n) => n + 1)}>
+                  Réessayer
+                </Button>
+              )}
+              <Button to="/services" variant={isNotFound ? 'primary' : 'secondary'}>
+                Retour au catalogue
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -154,6 +260,9 @@ export default function ServiceDetailPage() {
   const photos = service.photos || []
   const priceLabel = formatServicePrice(service)
   const backUrl = service.type ? `/services?type=${service.type}` : '/services'
+  const accommodationLabel =
+    service.type === 'hebergement' ? getAccommodationLabel(service.accommodationType) : null
+  const position = toLatLng(service.location)
 
   return (
     <section
@@ -162,6 +271,13 @@ export default function ServiceDetailPage() {
       aria-labelledby="service-detail-titre"
     >
       <div className="container">
+        {notice && (
+          <p className="service-detail__notice texte-s" role="status">
+            <Icon icon={CircleCheck} size={18} />
+            {notice}
+          </p>
+        )}
+
         <Link to={backUrl} className="service-detail__back texte-s">
           <Icon icon={ArrowLeft} size={16} />
           Retour aux {category ? category.title.toLowerCase() : 'services'}
@@ -185,8 +301,14 @@ export default function ServiceDetailPage() {
                 {service.cuisine && (
                   <span className="service-card__tag legende">{service.cuisine}</span>
                 )}
+                {accommodationLabel && (
+                  <span className="service-card__tag legende">{accommodationLabel}</span>
+                )}
                 {service.activityCategory && (
                   <span className="service-card__tag legende">{service.activityCategory}</span>
+                )}
+                {service.type === 'evenement' && service.event?.eventType && (
+                  <span className="service-card__tag legende">{service.event.eventType}</span>
                 )}
                 {service.free && (
                   <span className="service-card__free-tag legende">Gratuit</span>
@@ -215,11 +337,33 @@ export default function ServiceDetailPage() {
               </div>
             </header>
 
+            {offers.length > 0 && <ServiceOffers offers={offers} />}
+
             {service.description && (
               <div className="service-detail__section">
                 <h2 className="titre-3">À propos</h2>
                 <p className="service-detail__description texte">{service.description}</p>
               </div>
+            )}
+
+            {position && (
+              <div className="service-detail__section">
+                <h2 className="titre-3">Localisation</h2>
+                <div className="service-detail__map">
+                  <Suspense fallback={<MapPlaceholder />}>
+                    <ServicesMap
+                      key={service._id}
+                      center={position}
+                      services={mapServices}
+                      label={`Localisation de ${service.name}`}
+                    />
+                  </Suspense>
+                </div>
+              </div>
+            )}
+
+            {service.videoUrl && (
+              <ServiceVideo videoUrl={service.videoUrl} serviceName={service.name} />
             )}
 
             {service.type === 'evenement' && service.event?.startDate && (
@@ -231,6 +375,12 @@ export default function ServiceDetailPage() {
                   {service.event.endDate ? ` au ${formatEventDate(service.event.endDate)}` : ''}
                   {service.event.hours ? ` • ${service.event.hours}` : ''}
                 </p>
+                {service.event.eventType && (
+                  <p className="service-detail__meta-item texte">
+                    <Icon icon={Tag} size={18} />
+                    Type d’événement : {service.event.eventType}
+                  </p>
+                )}
               </div>
             )}
 

@@ -1,0 +1,75 @@
+/* Page « Mes services » (espace prestataire). Mobile d'abord ; 768px = --bp-md.
+   Grille, états et pagination : classes du catalogue (.services-page__…). */
+
+.mes-services__header {
+  justify-items: start;
+  gap: var(--space-4);
+}
+
+.mes-services__heading {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.mes-services__heading h1:focus {
+  outline: none;
+}
+
+.mes-services__heading h1:focus-visible {
+  border-radius: var(--radius-xs);
+  box-shadow: var(--focus-ring);
+}
+
+.mes-services__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--succes) 35%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--succes-pale);
+  color: var(--encre);
+}
+
+.mes-services__notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--succes);
+}
+
+.mes-services__alert {
+  margin-bottom: var(--space-5);
+}
+
+.mes-services__count {
+  margin: 0 0 var(--space-4);
+  color: var(--encre-2);
+}
+
+.mes-services__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mes-services__list > li {
+  display: grid;
+}
+
+/* Bouton « Supprimer » : variante ghost teintée « danger ». */
+.mes-services__delete.btn--ghost {
+  color: var(--danger);
+}
+
+.mes-services__delete.btn--ghost:hover:not(:disabled) {
+  background: var(--danger-pale);
+}
+
+/* Tablette (768px = --bp-md) : bouton « Publier » à droite du titre. */
+@media (min-width: 768px) {
+  .mes-services__header {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}

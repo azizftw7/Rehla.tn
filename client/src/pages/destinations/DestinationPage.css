@@ -1,0 +1,173 @@
+.destination-page {
+  padding-block: var(--space-6) var(--space-16);
+}
+
+.destination-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  color: var(--bleu);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.destination-page__back:hover {
+  text-decoration: underline;
+}
+
+.destination-page__header {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+/* Mobile : carte puis liste, empilées. */
+.destination-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+
+/* Ordinateur (1024px = --bp-lg) : carte à gauche (2fr), liste à droite (1fr). */
+@media (min-width: 1024px) {
+  .destination-page__layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .destination-page__map {
+    position: sticky;
+    top: calc(var(--space-16) + var(--space-4));
+  }
+
+  .destination-page__list {
+    max-height: 560px;
+    overflow-y: auto;
+    padding-right: var(--space-1);
+  }
+}
+
+.destination-page__map {
+  scroll-margin-top: calc(var(--space-16) + var(--space-4));
+}
+
+.destination-page__map-placeholder {
+  height: 360px;
+  border-radius: var(--radius-lg);
+}
+
+/* Ordinateur (1024px = --bp-lg) */
+@media (min-width: 1024px) {
+  .destination-page__map-placeholder {
+    height: 560px;
+  }
+}
+
+.destination-page__aside {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.destination-page__count {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+.destination-page__list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.destination-page__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--trait);
+  border-left: 4px solid var(--item-accent, var(--trait-fort));
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--duree-base) var(--ease-standard),
+    box-shadow var(--duree-base) var(--ease-standard),
+    background-color var(--duree-base) var(--ease-standard);
+}
+
+.destination-page__item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.destination-page__item[data-selected='true'] {
+  background: color-mix(in srgb, var(--item-accent) 10%, var(--surface));
+  box-shadow: var(--shadow-md);
+}
+
+.destination-page__item-body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.destination-page__item-category {
+  color: var(--item-accent, var(--encre-2));
+  font-weight: 600;
+}
+
+.destination-page__item-name {
+  overflow-wrap: anywhere;
+  color: var(--encre);
+  text-decoration: none;
+}
+
+.destination-page__item-name:hover {
+  color: var(--bleu);
+  text-decoration: underline;
+}
+
+.destination-page__item-price {
+  color: var(--encre-2);
+}
+
+.destination-page__locate {
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+  color: var(--item-accent, var(--bleu));
+}
+
+.destination-page__locate[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--item-accent) 15%, transparent);
+}
+
+.destination-page__state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  border: 1px dashed var(--trait-fort);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .destination-page__item {
+    transition: none;
+  }
+
+  .destination-page__item:hover {
+    transform: none;
+  }
+}
+
+/* Filtres par type de transport (onglet Transports, US4.1) : dans la colonne de la liste. */
+.destination-page__modes {
+  margin-bottom: 0;
+}

@@ -12,7 +12,21 @@ export const env = {
     .split(',')
     .map((url) => url.trim())
     .filter(Boolean),
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+  },
 };
+
+/** Variables indispensables au démarrage du serveur. */
+export const REQUIRED_ENV = [
+  'MONGODB_URI',
+  'JWT_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
+];
 
 export const isProduction = () => env.nodeEnv === 'production';
 export const isTest = () => env.nodeEnv === 'test';
@@ -21,7 +35,7 @@ export const isTest = () => env.nodeEnv === 'test';
  * Vérifie que les variables indispensables au démarrage sont définies.
  * Lève une erreur avec un message explicite sinon.
  */
-export function assertEnv(names = ['MONGODB_URI', 'JWT_SECRET']) {
+export function assertEnv(names = REQUIRED_ENV) {
   const missing = names.filter((name) => !process.env[name]);
   if (missing.length > 0) {
     throw new Error(

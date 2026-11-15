@@ -1,0 +1,145 @@
+/* Cadre commun des cartes Leaflet.
+   Le cadre crée son propre contexte d'empilement (z-index --z-carte) pour que les panneaux
+   et contrôles Leaflet (z-index 400 à 1000) restent sous la NavBar. */
+.map-frame {
+  position: relative;
+  z-index: var(--z-carte);
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Hauteur mobile commune ; chaque carte fixe sa hauteur ordinateur. */
+.map-frame__canvas {
+  width: 100%;
+  height: 360px;
+  background: var(--surface-alt);
+  font: inherit;
+}
+
+.map-frame__banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--trait);
+  background: var(--surface);
+  color: var(--encre);
+}
+
+/* ---------- Marqueurs : goutte à la couleur --marker-color ---------- */
+
+.map-marker__icon {
+  background: none;
+  border: 0;
+}
+
+.map-marker {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border: 3px solid var(--surface);
+  border-radius: 50% 50% 50% 0;
+  background: var(--marker-color, var(--bleu));
+  box-shadow: var(--shadow-md);
+  transform: rotate(-45deg);
+  transition: transform var(--duree-base) var(--ease-standard);
+}
+
+.map-marker::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 8px;
+  height: 8px;
+  margin: auto;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+}
+
+.map-marker--selected {
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+}
+
+.map-marker__icon:hover .map-marker {
+  transform: rotate(-45deg) scale(1.1);
+}
+
+.leaflet-marker-icon.map-marker__icon:focus-visible {
+  outline: none;
+}
+
+.leaflet-marker-icon.map-marker__icon:focus-visible .map-marker {
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Bulles et contrôles aux couleurs du thème ---------- */
+
+.map-frame .leaflet-popup-content-wrapper,
+.map-frame .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--encre);
+  box-shadow: var(--shadow-md);
+}
+
+.map-frame .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+}
+
+.map-frame .leaflet-popup-content {
+  margin: var(--space-3) var(--space-4);
+  font-family: var(--font-sans);
+}
+
+.map-frame .leaflet-container a.leaflet-popup-close-button {
+  color: var(--encre-2);
+}
+
+/* Leaflet colore tous les liens : les boutons du design system gardent leurs couleurs. */
+.map-frame a.btn--primary {
+  color: var(--on-bleu);
+}
+
+.map-frame .leaflet-bar {
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.map-frame .leaflet-bar a {
+  background: var(--surface);
+  color: var(--encre);
+  border-bottom-color: var(--trait);
+}
+
+.map-frame .leaflet-bar a:hover {
+  background: var(--surface-alt);
+}
+
+.map-frame .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  color: var(--encre-2);
+}
+
+.map-frame .leaflet-control-attribution a {
+  color: var(--bleu);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-marker {
+    transition: none;
+  }
+
+  .map-marker__icon:hover .map-marker {
+    transform: rotate(-45deg);
+  }
+}

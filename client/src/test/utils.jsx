@@ -43,3 +43,21 @@ export function renderWithRouter(ui, { route = '/' } = {}) {
     </MemoryRouter>,
   )
 }
+
+/**
+ * Simule l'API : `routes` associe « MÉTHODE /chemin » à une fonction (body) => réponse.
+ * Une route absente renvoie 404. Un corps FormData est transmis tel quel au gestionnaire. Renvoie le mock de fetch (appels : url, options).
+ */
+export function mockApi(routes) {
+  const fetchMock = vi.fn(async (url, options = {}) => {
+    const method = options.method || 'GET'
+    const path = new URL(url).pathname.replace(/^\/api/, '')
+    const handler = routes[`${method} ${path}`]
+    if (!handler) return jsonResponse({ message: 'Ressource introuvable.' }, 404)
+    const body =
+      options.body instanceof FormData || !options.body ? options.body : JSON.parse(options.body)
+    return handler(body, options)
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}

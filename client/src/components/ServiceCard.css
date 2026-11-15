@@ -119,6 +119,20 @@
   color: var(--encre-2);
 }
 
+.service-card__dates {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--encre);
+  font-weight: 500;
+}
+
+.service-card__dates svg {
+  flex-shrink: 0;
+  color: var(--service-accent, var(--bleu));
+}
+
 .service-card__description {
   display: -webkit-box;
   overflow: hidden;
@@ -159,4 +173,31 @@
   background: var(--lagune);
   color: var(--surface);
   font-weight: 600;
+}
+
+/* ---------- Service masqué et actions (espace prestataire) ---------- */
+
+.service-card__badge--hidden {
+  left: auto;
+  right: var(--space-3);
+  background: var(--encre);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.service-card--hidden .service-card__media img,
+.service-card--hidden .service-card__placeholder {
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+
+/* Au-dessus du lien étiré sur toute la carte (.service-card__link::after) : restent cliquables. */
+.service-card__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--trait);
 }

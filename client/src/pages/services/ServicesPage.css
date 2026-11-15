@@ -89,6 +89,15 @@
   box-shadow: var(--focus-ring);
 }
 
+.services-page__input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.services-page__field-error {
+  margin: 0;
+  color: var(--danger);
+}
+
 .services-page__checkbox {
   display: inline-flex;
   align-items: center;

@@ -95,6 +95,27 @@ describe('NavBar — utilisateur connecté', () => {
     expect(screen.queryByRole('link', { name: 'Espace prestataire' })).not.toBeInTheDocument()
   })
 
+  it.each([
+    ['voyageur', { _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' }],
+    [
+      'prestataire',
+      { _id: 'p1', name: 'Karim Jlassi', role: 'prestataire', provider: { approval: 'approuve' } },
+    ],
+    ['admin', { _id: 'a1', name: 'Admin Rehla', role: 'admin' }],
+  ])('propose « Mot de passe » à un compte %s', async (_role, account) => {
+    renderConnected(account)
+
+    expect(await screen.findByRole('link', { name: 'Mot de passe' })).toHaveAttribute(
+      'href',
+      '/mon-compte/mot-de-passe',
+    )
+  })
+
+  it('pas de lien « Mot de passe » pour un visiteur', () => {
+    renderWithRouter(<NavBar />)
+    expect(screen.queryByRole('link', { name: 'Mot de passe' })).not.toBeInTheDocument()
+  })
+
   it('déconnecte l’utilisateur (y compris depuis le menu mobile)', async () => {
     const user = userEvent.setup()
     renderConnected({ _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' })

@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireApprovedProvider from './components/RequireApprovedProvider.jsx'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
 import AdminUsersPage from './pages/admin/AdminUsersPage.jsx'
+import ChangePasswordPage from './pages/account/ChangePasswordPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
 import CrashTestPage from './pages/dev/CrashTestPage.jsx'
@@ -29,6 +30,14 @@ export default function App() {
         <Route path="services/:id" element={<ServiceDetailPage />} />
         <Route path="connexion" element={<LoginPage />} />
         <Route path="inscription" element={<RegisterPage />} />
+        <Route
+          path="mon-compte/mot-de-passe"
+          element={
+            <ProtectedRoute>
+              <ChangePasswordPage />
+            </ProtectedRoute>
+          }
+        />
         <Route element={<ProtectedRoute roles={['prestataire']} />}>
           <Route path="prestataire/en-attente" element={<ProviderPendingPage />} />
           {/* Espace prestataire : ouvert seulement après validation par l'administrateur. */}

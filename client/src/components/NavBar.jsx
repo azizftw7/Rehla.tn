@@ -1,4 +1,4 @@
-import { CircleUserRound, LogOut, Menu, Moon, ShieldCheck, Store, Sun, X } from 'lucide-react'
+import { CircleUserRound, KeyRound, LogOut, Menu, Moon, ShieldCheck, Store, Sun, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
@@ -143,6 +143,14 @@ export default function NavBar() {
                   )}
                 </Button>
               )}
+              <Button
+                to="/mon-compte/mot-de-passe"
+                variant="ghost"
+                icon={KeyRound}
+                onClick={closeMenu}
+              >
+                Mot de passe
+              </Button>
               <Button
                 variant="ghost"
                 icon={LogOut}

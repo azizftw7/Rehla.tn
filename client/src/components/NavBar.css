@@ -116,6 +116,27 @@
   white-space: nowrap;
 }
 
+/* Petit compteur / état dans un bouton (demandes en attente, compte prestataire en attente). */
+.navbar__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--safran);
+  color: var(--on-safran);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.navbar__badge--attente {
+  background: var(--safran-pale);
+  color: var(--safran-texte);
+  font-weight: 600;
+}
+
 @keyframes navbar-ouverture {
   from {
     opacity: 0;

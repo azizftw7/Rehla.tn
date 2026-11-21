@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
-import { ACCOUNT_SUSPENDED } from '../utils/messages.js';
+import { ACCOUNT_SUSPENDED, PROVIDER_PENDING, PROVIDER_REJECTED } from '../utils/messages.js';
 
 function readBearerToken(req) {
   const [scheme, token] = (req.headers.authorization ?? '').split(' ');
@@ -64,4 +64,14 @@ export function authorize(...roles) {
     }
     next();
   };
+}
+
+/**
+ * Ferme l'espace prestataire tant que l'administrateur n'a pas approuvé le compte
+ * (à placer après authorize('prestataire')) : 403 « en attente » ou « refusé ».
+ */
+export function requireApprovedProvider(req, _res, next) {
+  const approval = req.user?.provider?.approval;
+  if (approval === 'approuve') return next();
+  throw ApiError.forbidden(approval === 'refuse' ? PROVIDER_REJECTED : PROVIDER_PENDING);
 }

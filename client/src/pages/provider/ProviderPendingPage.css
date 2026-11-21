@@ -1,0 +1,77 @@
+/* Page « demande en attente / refusée » du prestataire.
+   Mise en page des pages d'erreur (texte + arche). Mobile d'abord ; 1024px = --bp-lg. */
+
+.attente-page {
+  padding-block: var(--space-12) var(--space-16);
+}
+
+.attente-page__inner {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.attente-page__texte {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: start;
+}
+
+.attente-page__header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.attente-page__header .texte-l {
+  max-width: 52ch;
+}
+
+.attente-page__motif {
+  display: grid;
+  gap: var(--space-1);
+  width: 100%;
+  max-width: 52ch;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--danger-pale);
+  color: var(--encre);
+}
+
+.attente-page__motif h2,
+.attente-page__motif p {
+  margin: 0;
+}
+
+.attente-page__motif h2 {
+  color: var(--danger);
+}
+
+.attente-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.attente-page__illustration {
+  justify-self: center;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Ordinateur (1024px = --bp-lg) : texte à gauche, arche à droite. */
+@media (min-width: 1024px) {
+  .attente-page {
+    padding-block: var(--space-16) var(--space-24);
+  }
+
+  .attente-page__inner {
+    grid-template-columns: 1.3fr 1fr;
+    gap: var(--space-16);
+  }
+
+  .attente-page__illustration {
+    max-width: 380px;
+  }
+}

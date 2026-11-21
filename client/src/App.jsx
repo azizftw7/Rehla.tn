@@ -1,6 +1,9 @@
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import RequireApprovedProvider from './components/RequireApprovedProvider.jsx'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
+import AdminUsersPage from './pages/admin/AdminUsersPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
 import CrashTestPage from './pages/dev/CrashTestPage.jsx'
@@ -11,6 +14,7 @@ import NotFoundPage from './pages/NotFoundPage.jsx'
 import EditServicePage from './pages/provider/EditServicePage.jsx'
 import MyServicesPage from './pages/provider/MyServicesPage.jsx'
 import NewServicePage from './pages/provider/NewServicePage.jsx'
+import ProviderPendingPage from './pages/provider/ProviderPendingPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
 import ServicesPage from './pages/services/ServicesPage.jsx'
 
@@ -26,9 +30,17 @@ export default function App() {
         <Route path="connexion" element={<LoginPage />} />
         <Route path="inscription" element={<RegisterPage />} />
         <Route element={<ProtectedRoute roles={['prestataire']} />}>
-          <Route path="prestataire/services" element={<MyServicesPage />} />
-          <Route path="prestataire/services/nouveau" element={<NewServicePage />} />
-          <Route path="prestataire/services/:id/modifier" element={<EditServicePage />} />
+          <Route path="prestataire/en-attente" element={<ProviderPendingPage />} />
+          {/* Espace prestataire : ouvert seulement après validation par l'administrateur. */}
+          <Route element={<RequireApprovedProvider />}>
+            <Route path="prestataire/services" element={<MyServicesPage />} />
+            <Route path="prestataire/services/nouveau" element={<NewServicePage />} />
+            <Route path="prestataire/services/:id/modifier" element={<EditServicePage />} />
+          </Route>
+        </Route>
+        <Route element={<ProtectedRoute roles={['admin']} />}>
+          <Route path="admin" element={<AdminDashboardPage />} />
+          <Route path="admin/utilisateurs" element={<AdminUsersPage />} />
         </Route>
         {import.meta.env.DEV && <Route path="test-erreur" element={<CrashTestPage />} />}
         <Route path="*" element={<NotFoundPage />} />

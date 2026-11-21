@@ -175,7 +175,10 @@ describe('RegisterPage — prestataire', () => {
     await user.type(screen.getByLabelText('Téléphone'), '+216 76 000 000')
     await user.click(screen.getByRole('button', { name: 'Créer mon compte' }))
 
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/))
+    // Le compte doit d'abord être validé par l'administrateur.
+    await waitFor(() =>
+      expect(screen.getByTestId('location')).toHaveTextContent('/prestataire/en-attente'),
+    )
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       name: 'Karim Jlassi',
       email: 'karim@rehla.tn',

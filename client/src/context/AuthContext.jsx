@@ -5,7 +5,7 @@ import { AuthContext } from './authContextDef.js'
 const LOGGED_OUT = { token: null, user: null, checking: false }
 
 /**
- * Fournit la session : user, token (localStorage « rehla-token »), login, register, logout.
+ * Fournit la session : user, token (localStorage « rehla-token »), login, register, refreshUser, logout.
  * Au démarrage, si un token est stocké, l'utilisateur est rechargé depuis GET /users/me.
  */
 export function AuthProvider({ children }) {
@@ -49,6 +49,13 @@ export function AuthProvider({ children }) {
     [startSession],
   )
 
+  // Relit le compte (ex. la page « demande en attente » vérifie si l'admin a validé le compte).
+  const refreshUser = useCallback(async (options) => {
+    const { user } = await apiGet('/users/me', options)
+    setSession((prev) => (prev.token ? { ...prev, user } : prev))
+    return user
+  }, [])
+
   const logout = useCallback(() => {
     setStoredToken(null)
     setSession(LOGGED_OUT)
@@ -61,9 +68,10 @@ export function AuthProvider({ children }) {
       loading: session.checking,
       login,
       register,
+      refreshUser,
       logout,
     }),
-    [session, login, register, logout],
+    [session, login, register, refreshUser, logout],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

@@ -125,7 +125,8 @@ describe('US1.5 — PUT /api/users/me', () => {
   it('permet à un prestataire de modifier une partie de son activité', async () => {
     const prestataire = await createUser({ role: 'prestataire' });
 
-    const res = await updateMe(prestataire, { provider: { city: 'Djerba' } });
+    // La validation (approval) est réservée à l'administrateur : ignorée ici.
+    const res = await updateMe(prestataire, { provider: { city: 'Djerba', approval: 'refuse' } });
 
     expect(res.status).toBe(200);
     expect(res.body.user.provider).toEqual({
@@ -133,6 +134,7 @@ describe('US1.5 — PUT /api/users/me', () => {
       activityType: 'hebergement',
       city: 'Djerba',
       phone: '+216 70 000 000',
+      approval: 'approuve',
     });
   });
 

@@ -24,9 +24,17 @@ describe('npm run seed', () => {
     const count = (name) => db.collection(name).countDocuments();
 
     expect(await count('destinations')).toBe(3);
-    expect(await count('users')).toBe(6);
+    expect(await count('users')).toBe(7);
     expect(await db.collection('users').countDocuments({ role: 'admin' })).toBe(1);
-    expect(await db.collection('users').countDocuments({ role: 'prestataire' })).toBe(2);
+    expect(await db.collection('users').countDocuments({ role: 'prestataire' })).toBe(3);
+    // US7.1 : les prestataires qui ont des services sont approuvés, un troisième attend.
+    const providers = await db.collection('users').find({ role: 'prestataire' }).toArray();
+    const approvals = Object.fromEntries(providers.map((p) => [p.email, p.provider.approval]));
+    expect(approvals).toEqual({
+      'prestataire1@demo.rehla.tn': 'approuve',
+      'prestataire2@demo.rehla.tn': 'approuve',
+      'prestataire3@demo.rehla.tn': 'en_attente',
+    });
     expect(await db.collection('users').countDocuments({ role: 'voyageur' })).toBe(3);
     expect(await db.collection('services').distinct('type')).toEqual(
       expect.arrayContaining(['hebergement', 'restaurant', 'activite', 'evenement', 'guide']),

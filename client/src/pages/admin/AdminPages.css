@@ -1,0 +1,548 @@
+/* Espace administrateur (tableau de bord, gestion des utilisateurs).
+   En-tête, onglets, filtres, états et pagination : classes du catalogue (.services-page__…).
+   Mobile d'abord ; 768px = --bp-md, 1024px = --bp-lg. */
+
+.admin-page__header {
+  justify-items: start;
+  gap: var(--space-4);
+}
+
+.admin-page__heading {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.admin-page__title:focus {
+  outline: none;
+}
+
+.admin-page__title:focus-visible {
+  border-radius: var(--radius-xs);
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Tableau de bord : cartes de statistiques ---------- */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-stat {
+  --stat-accent: var(--bleu);
+  --stat-pale: var(--bleu-pale);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: 100%;
+  padding: var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--encre);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--duree-base) var(--ease-sortie),
+    box-shadow var(--duree-base) var(--ease-sortie),
+    border-color var(--duree-base) var(--ease-standard);
+}
+
+.admin-stat:hover {
+  transform: translateY(calc(-1 * var(--space-1)));
+  border-color: var(--trait-fort);
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-stat:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.admin-stat--lagune {
+  --stat-accent: var(--lagune);
+  --stat-pale: var(--lagune-pale);
+}
+
+.admin-stat--safran {
+  --stat-accent: var(--safran-texte);
+  --stat-pale: var(--safran-pale);
+}
+
+.admin-stat--danger {
+  --stat-accent: var(--danger);
+  --stat-pale: var(--danger-pale);
+}
+
+.admin-stat__icon {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--stat-pale);
+  color: var(--stat-accent);
+}
+
+.admin-stat__body {
+  display: grid;
+  flex: 1;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.admin-stat__value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.admin-stat__label {
+  color: var(--encre-2);
+}
+
+.admin-stat__chevron {
+  flex-shrink: 0;
+  color: var(--encre-2);
+  transition: transform var(--duree-base) var(--ease-standard);
+}
+
+.admin-stat:hover .admin-stat__chevron {
+  transform: translateX(var(--space-1));
+}
+
+/* ---------- Gestion des utilisateurs ---------- */
+
+.admin-tab__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--safran);
+  color: var(--on-safran);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.admin-page__search {
+  grid-template-columns: 1fr;
+}
+
+.admin-page__search button[type='submit'],
+.admin-page__search button[type='submit'] > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.admin-page__search button[type='submit'] {
+  height: 40px;
+}
+
+.admin-page__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--succes) 35%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--succes-pale);
+  color: var(--encre);
+}
+
+.admin-page__notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--succes);
+}
+
+.admin-page__alert {
+  margin-bottom: var(--space-5);
+}
+
+/* Badges de statut */
+.admin-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.admin-badge--actif {
+  border-color: color-mix(in srgb, var(--succes) 35%, transparent);
+  background: var(--succes-pale);
+  color: var(--succes);
+}
+
+.admin-badge--suspendu {
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+  background: var(--danger-pale);
+  color: var(--danger);
+}
+
+.admin-badge--attente {
+  border-color: color-mix(in srgb, var(--safran) 45%, transparent);
+  background: var(--safran-pale);
+  color: var(--safran-texte);
+}
+
+.admin-badge--refuse {
+  border-color: color-mix(in srgb, var(--bougainvillier) 35%, transparent);
+  background: var(--bougainvillier-pale);
+  color: var(--bougainvillier-fort);
+}
+
+.admin-role {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.admin-role svg {
+  color: var(--bleu);
+}
+
+/* Tableau → cartes sur mobile : une ligne = une carte, chaque cellule porte son intitulé. */
+.admin-table {
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table tbody {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-table__head {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.admin-table__row {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-table__row > th,
+.admin-table__row > td {
+  display: block;
+  padding: 0;
+  text-align: left;
+}
+
+.admin-table__row > td {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 15px;
+}
+
+.admin-table__row > td::before {
+  content: attr(data-label);
+  color: var(--encre-2);
+  font-size: 13px;
+}
+
+.admin-table__name {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.admin-table__email {
+  overflow-wrap: anywhere;
+}
+
+.admin-table__muted {
+  color: var(--encre-2);
+}
+
+.admin-table__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  margin-left: calc(-1 * var(--space-2));
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--bleu);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--duree-rapide) var(--ease-standard);
+}
+
+.admin-table__toggle:hover {
+  background: var(--bleu-pale);
+}
+
+.admin-table__toggle svg {
+  transition: transform var(--duree-base) var(--ease-standard);
+}
+
+.admin-table__toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+/* Détail d'un prestataire : collé sous sa carte. */
+.admin-table__details {
+  display: block;
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.admin-table__details > td {
+  display: block;
+  padding: var(--space-4);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface-alt);
+}
+
+.admin-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+}
+
+.admin-details__item {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-details dt {
+  color: var(--encre-2);
+}
+
+.admin-details dd {
+  margin: 0;
+  color: var(--encre);
+}
+
+/* Actions */
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-table__row > td.admin-table__actions {
+  grid-template-columns: 1fr;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--trait);
+}
+
+.admin-table__row > td.admin-table__actions::before {
+  display: none;
+}
+
+/* Bouton ghost teinté « danger » (Refuser, Supprimer), comme dans « Mes services ». */
+.admin-actions__danger.btn--ghost {
+  color: var(--danger);
+}
+
+.admin-actions__danger.btn--ghost:hover:not(:disabled) {
+  background: var(--danger-pale);
+}
+
+/* Chargement */
+.admin-skeletons {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-skeleton {
+  height: 72px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-alt);
+  animation: admin-pulse var(--duree-lente) var(--ease-standard) infinite alternate;
+}
+
+@keyframes admin-pulse {
+  to {
+    opacity: 0.5;
+  }
+}
+
+/* Boîte « Refuser » : champ du motif */
+.admin-dialog__field {
+  margin-top: var(--space-2);
+}
+
+.admin-dialog__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.admin-dialog__hint {
+  margin: 0;
+  color: var(--encre-2);
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-stat,
+  .admin-stat__chevron,
+  .admin-table__toggle svg {
+    transition: none;
+  }
+
+  .admin-stat:hover {
+    transform: none;
+  }
+
+  .admin-stat:hover .admin-stat__chevron {
+    transform: none;
+  }
+
+  .admin-skeleton {
+    animation: none;
+  }
+}
+
+/* Tablette (768px = --bp-md) : bouton à droite du titre, recherche sur une ligne. */
+@media (min-width: 768px) {
+  .admin-page__header {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+
+  .admin-page__search {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+/* Ordinateur (1024px = --bp-lg) : vrai tableau. */
+@media (min-width: 1024px) {
+  .admin-table {
+    display: table;
+    overflow: hidden;
+    border: 1px solid var(--trait);
+    border-radius: var(--radius-lg);
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-table tbody {
+    display: table-row-group;
+  }
+
+  .admin-table__head {
+    position: static;
+    display: table-header-group;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .admin-table__head th {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--trait);
+    background: var(--surface-alt);
+    color: var(--encre-2);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .admin-table__row {
+    display: table-row;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transition: background-color var(--duree-rapide) var(--ease-standard);
+  }
+
+  .admin-table__row:hover {
+    background: color-mix(in srgb, var(--bleu) 4%, transparent);
+  }
+
+  .admin-table__row > th,
+  .admin-table__row > td,
+  .admin-table__row > td.admin-table__actions {
+    display: table-cell;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--trait);
+    vertical-align: middle;
+  }
+
+  .admin-table tbody > tr:first-child > * {
+    border-top: 0;
+  }
+
+  .admin-table__row > td::before {
+    display: none;
+  }
+
+  .admin-table__name {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .admin-table__details {
+    display: table-row;
+    margin: 0;
+  }
+
+  .admin-table__details > td {
+    display: table-cell;
+    padding: var(--space-4) var(--space-6);
+    border: 0;
+    border-radius: 0;
+  }
+
+  .admin-actions {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .admin-table__row {
+    transition: none;
+  }
+}

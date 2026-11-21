@@ -4,6 +4,8 @@ import mongoose, { Schema } from 'mongoose';
 export const ROLES = ['voyageur', 'prestataire', 'admin'];
 export const TRAVELER_PROFILES = ['etudiant', 'resident', 'touriste'];
 export const USER_STATUSES = ['actif', 'suspendu'];
+// Validation d'un compte prestataire par l'administrateur (US7.1).
+export const PROVIDER_APPROVALS = ['en_attente', 'approuve', 'refuse'];
 
 const SALT_ROUNDS = 10;
 
@@ -13,6 +15,18 @@ const providerSchema = new Schema(
     activityType: { type: String, trim: true, maxlength: 60 },
     city: { type: String, trim: true, maxlength: 80 },
     phone: { type: String, trim: true, maxlength: 30 },
+    // Tant que la demande n'est pas « approuve », l'espace prestataire reste fermé.
+    approval: {
+      type: String,
+      enum: { values: PROVIDER_APPROVALS, message: 'Décision de validation invalide.' },
+      default: 'en_attente',
+    },
+    reviewedAt: { type: Date },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxlength: [300, 'Le motif ne peut pas dépasser 300 caractères.'],
+    },
   },
   { _id: false },
 );

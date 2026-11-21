@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import { authorize, protect } from '../middlewares/auth.js';
+import { authorize, protect, requireApprovedProvider } from '../middlewares/auth.js';
 import { authLimiter } from '../middlewares/rateLimit.js';
 import adminRoutes from './admin.routes.js';
 import authRoutes from './auth.routes.js';
@@ -17,7 +17,8 @@ router.use('/users', usersRoutes);
 router.use('/destinations', destinationsRoutes);
 router.use('/services', servicesRoutes);
 router.use('/transports', transportsRoutes);
-router.use('/provider', protect, authorize('prestataire'), providerRoutes);
+// Un prestataire n'accède à son espace qu'après validation par l'administrateur (US7.1).
+router.use('/provider', protect, authorize('prestataire'), requireApprovedProvider, providerRoutes);
 router.use('/admin', protect, authorize('admin'), adminRoutes);
 
 router.get('/health', (_req, res) => {

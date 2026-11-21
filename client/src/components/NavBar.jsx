@@ -4,7 +4,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { useTheme } from '../hooks/useTheme.js'
 import { fetchAdminStats, onAdminChange } from '../lib/adminApi.js'
-import { isApprovedProvider } from '../lib/providerApproval.js'
+import { canBecomeProvider, isApprovedProvider } from '../lib/providerApproval.js'
 import Button from './Button.jsx'
 import Icon from './Icon.jsx'
 import Logo from './Logo.jsx'
@@ -14,8 +14,8 @@ const NAV_LINKS = [
   { to: '/destinations', label: 'Destinations' },
   { to: '/services', label: 'Services' },
   { to: '/partage', label: 'Partage de voyage' },
-  { to: '/inscription?role=prestataire', label: 'Devenir prestataire' },
 ]
+const BECOME_PROVIDER_LINK = { to: '/inscription?role=prestataire', label: 'Devenir prestataire' }
 
 /** Nombre de demandes prestataire en attente (admin uniquement), mis à jour après chaque action. */
 function usePendingProviders(isAdmin) {
@@ -48,6 +48,9 @@ export default function NavBar() {
   const location = useLocation()
   const burgerRef = useRef(null)
   const pendingProviders = usePendingProviders(user?.role === 'admin')
+  const links = canBecomeProvider({ user, loading: sessionLoading })
+    ? [...NAV_LINKS, BECOME_PROVIDER_LINK]
+    : NAV_LINKS
   const providerState = user?.provider?.approval === 'refuse' ? 'Refusé' : 'En attente'
 
   // Le menu mobile est lié à la page où il a été ouvert : il se ferme seul au changement de page.
@@ -81,7 +84,7 @@ export default function NavBar() {
           aria-label="Navigation principale"
         >
           <ul role="list" className="navbar__links">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.to}>
                 <NavLink to={link.to} className="navbar__link" onClick={closeMenu}>
                   {link.label}

@@ -9,3 +9,11 @@ export function isApprovedProvider(user) {
 export function isRejectedProvider(user) {
   return user?.role === 'prestataire' && user.provider?.approval === 'refuse'
 }
+
+/**
+ * Le lien « Devenir prestataire » n'a de sens que pour un visiteur ou un voyageur.
+ * Masqué pendant la vérification de la session (évite un clignotement).
+ */
+export function canBecomeProvider({ user, loading }) {
+  return !loading && (!user || user.role === 'voyageur')
+}

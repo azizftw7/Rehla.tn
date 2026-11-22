@@ -39,6 +39,10 @@ export default function NavBar() {
   }, [menuOpen])
 
   const nextTheme = theme === 'dark' ? 'clair' : 'sombre'
+  const visibleLinks =
+    user?.role === 'prestataire'
+      ? NAV_LINKS.filter((link) => link.to !== '/inscription?role=prestataire')
+      : NAV_LINKS
 
   return (
     <header className="navbar">
@@ -52,7 +56,7 @@ export default function NavBar() {
           aria-label="Navigation principale"
         >
           <ul role="list" className="navbar__links">
-            {NAV_LINKS.map((link) => (
+            {visibleLinks.map((link) => (
               <li key={link.to}>
                 <NavLink to={link.to} className="navbar__link" onClick={closeMenu}>
                   {link.label}

@@ -5,6 +5,7 @@ import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
 import { CATEGORIES } from '../../data/categories.js'
 import { useAuth } from '../../hooks/useAuth.js'
+import { isApprovedProvider } from '../../lib/providerApproval.js'
 import AuthLayout, { AuthField, FormAlert } from './AuthLayout.jsx'
 import { fieldId, getRedirectTarget, splitApiError, withoutEmpty } from './authForm.js'
 import PasswordInput from './PasswordInput.jsx'
@@ -76,6 +77,10 @@ export default function RegisterPage() {
   const [generalError, setGeneralError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // Un nouveau prestataire attend la validation de l'administrateur avant d'ouvrir son espace.
+  if (user?.role === 'prestataire' && !isApprovedProvider(user)) {
+    return <Navigate to="/prestataire/en-attente" replace />
+  }
   if (user) return <Navigate to={getRedirectTarget(location)} replace />
 
   const update = (field) => (event) => {

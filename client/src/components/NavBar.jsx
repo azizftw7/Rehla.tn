@@ -1,8 +1,10 @@
-import { CircleUserRound, LogOut, Menu, Moon, Store, Sun, X } from 'lucide-react'
+import { CircleUserRound, KeyRound, LogOut, Menu, Moon, ShieldCheck, Store, Sun, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { useTheme } from '../hooks/useTheme.js'
+import { fetchAdminStats, onAdminChange } from '../lib/adminApi.js'
+import { canBecomeProvider, isApprovedProvider } from '../lib/providerApproval.js'
 import Button from './Button.jsx'
 import Icon from './Icon.jsx'
 import Logo from './Logo.jsx'
@@ -12,14 +14,44 @@ const NAV_LINKS = [
   { to: '/destinations', label: 'Destinations' },
   { to: '/services', label: 'Services' },
   { to: '/partage', label: 'Partage de voyage' },
-  { to: '/inscription?role=prestataire', label: 'Devenir prestataire' },
 ]
+const BECOME_PROVIDER_LINK = { to: '/inscription?role=prestataire', label: 'Devenir prestataire' }
+
+/** Nombre de demandes prestataire en attente (admin uniquement), mis à jour après chaque action. */
+function usePendingProviders(isAdmin) {
+  const [count, setCount] = useState(null)
+  useEffect(() => {
+    if (!isAdmin) return undefined
+    let controller
+    const load = () => {
+      controller?.abort()
+      controller = new AbortController()
+      fetchAdminStats({ signal: controller.signal })
+        .then((stats) => setCount(stats.pendingProviders))
+        .catch(() => {
+          // Compteur facultatif : le bouton reste affiché sans lui.
+        })
+    }
+    load()
+    const unsubscribe = onAdminChange(load)
+    return () => {
+      unsubscribe()
+      controller?.abort()
+    }
+  }, [isAdmin])
+  return isAdmin ? count : null
+}
 
 export default function NavBar() {
   const { theme, toggleTheme } = useTheme()
   const { user, loading: sessionLoading, logout } = useAuth()
   const location = useLocation()
   const burgerRef = useRef(null)
+  const pendingProviders = usePendingProviders(user?.role === 'admin')
+  const links = canBecomeProvider({ user, loading: sessionLoading })
+    ? [...NAV_LINKS, BECOME_PROVIDER_LINK]
+    : NAV_LINKS
+  const providerState = user?.provider?.approval === 'refuse' ? 'Refusé' : 'En attente'
 
   // Le menu mobile est lié à la page où il a été ouvert : il se ferme seul au changement de page.
   const [openOnPage, setOpenOnPage] = useState(null)
@@ -39,10 +71,6 @@ export default function NavBar() {
   }, [menuOpen])
 
   const nextTheme = theme === 'dark' ? 'clair' : 'sombre'
-  const visibleLinks =
-    user?.role === 'prestataire'
-      ? NAV_LINKS.filter((link) => link.to !== '/inscription?role=prestataire')
-      : NAV_LINKS
 
   return (
     <header className="navbar">
@@ -56,7 +84,7 @@ export default function NavBar() {
           aria-label="Navigation principale"
         >
           <ul role="list" className="navbar__links">
-            {visibleLinks.map((link) => (
+            {links.map((link) => (
               <li key={link.to}>
                 <NavLink to={link.to} className="navbar__link" onClick={closeMenu}>
                   {link.label}
@@ -73,20 +101,77 @@ export default function NavBar() {
                   {user.name}
                 </span>
               </p>
-              {user.role === 'prestataire' && (
-                <Button to="/prestataire/services" variant="secondary" icon={Store} onClick={closeMenu}>
-                  Espace prestataire
+              {user.role === 'prestataire' &&
+                (isApprovedProvider(user) ? (
+                  <Button
+                    to="/prestataire/services"
+                    variant="secondary"
+                    icon={Store}
+                    className="navbar__btn navbar__btn--compact-lg"
+                    title="Espace prestataire"
+                    onClick={closeMenu}
+                  >
+                    <span className="navbar__btn-label">Espace prestataire</span>
+                  </Button>
+                ) : (
+                  <Button
+                    to="/prestataire/en-attente"
+                    variant="secondary"
+                    icon={Store}
+                    className="navbar__btn navbar__btn--compact-lg"
+                    title="Espace prestataire"
+                    aria-label={`Espace prestataire : ${providerState}`}
+                    onClick={closeMenu}
+                  >
+                    <span className="navbar__btn-label">Espace prestataire</span>
+                    <span className="navbar__badge navbar__badge--attente">{providerState}</span>
+                  </Button>
+                ))}
+              {user.role === 'admin' && (
+                <Button
+                  to="/admin"
+                  variant="secondary"
+                  icon={ShieldCheck}
+                  className="navbar__btn navbar__btn--compact-lg"
+                  title="Administration"
+                  aria-label={
+                    pendingProviders > 0
+                      ? `Administration : ${pendingProviders} demande${pendingProviders > 1 ? 's' : ''} en attente`
+                      : undefined
+                  }
+                  onClick={closeMenu}
+                >
+                  <span className="navbar__btn-label">Administration</span>
+                  {pendingProviders > 0 && (
+                    <span className="navbar__badge" title="Demandes prestataire en attente">
+                      {pendingProviders}
+                    </span>
+                  )}
                 </Button>
               )}
+              {/* Sur ordinateur, ces deux boutons n'affichent que leur icône (libellé lu par les
+                  lecteurs d'écran, infobulle au survol) : la barre ne déborde pas. */}
+              <Button
+                to="/mon-compte/mot-de-passe"
+                variant="ghost"
+                icon={KeyRound}
+                className="navbar__btn navbar__btn--compact"
+                title="Mot de passe"
+                onClick={closeMenu}
+              >
+                <span className="navbar__btn-label">Mot de passe</span>
+              </Button>
               <Button
                 variant="ghost"
                 icon={LogOut}
+                className="navbar__btn navbar__btn--compact"
+                title="Déconnexion"
                 onClick={() => {
                   closeMenu()
                   logout()
                 }}
               >
-                Déconnexion
+                <span className="navbar__btn-label">Déconnexion</span>
               </Button>
             </div>
           ) : (

@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AuthProvider } from '../context/AuthContext.jsx'
 import { THEME_STORAGE_KEY } from '../hooks/useTheme.js'
+import { notifyAdminChange } from '../lib/adminApi.js'
 import { TOKEN_STORAGE_KEY } from '../lib/api.js'
 import {
   jsonResponse,
@@ -39,13 +40,80 @@ describe('NavBar — utilisateur connecté', () => {
     expect(screen.queryByRole('link', { name: 'Espace prestataire' })).not.toBeInTheDocument()
   })
 
-  it('propose l’espace prestataire à un prestataire', async () => {
-    renderConnected({ _id: 'p1', name: 'Karim Jlassi', role: 'prestataire' })
+  it('propose l’espace prestataire à un prestataire validé', async () => {
+    renderConnected({
+      _id: 'p1',
+      name: 'Karim Jlassi',
+      role: 'prestataire',
+      provider: { approval: 'approuve' },
+    })
 
     expect(await screen.findByRole('link', { name: 'Espace prestataire' })).toHaveAttribute(
       'href',
       '/prestataire/services',
     )
+    expect(screen.queryByRole('link', { name: 'Administration' })).not.toBeInTheDocument()
+  })
+
+  it('affiche « En attente » tant que le compte prestataire n’est pas validé', async () => {
+    renderConnected({
+      _id: 'p2',
+      name: 'Sami Gharbi',
+      role: 'prestataire',
+      provider: { approval: 'en_attente' },
+    })
+
+    const link = await screen.findByRole('link', { name: 'Espace prestataire : En attente' })
+    expect(link).toHaveAttribute('href', '/prestataire/en-attente')
+  })
+
+  it('affiche « Administration » avec le nombre de demandes en attente pour un admin', async () => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, 'jeton')
+    const stats = { users: {}, suspended: 0, pendingProviders: 3 }
+    mockApi({
+      'GET /users/me': () =>
+        jsonResponse({ user: { _id: 'a1', name: 'Admin Rehla', role: 'admin' } }),
+      'GET /admin/stats': () => jsonResponse(stats),
+    })
+    render(
+      <AuthProvider>
+        <MemoryRouter>
+          <NavBar />
+        </MemoryRouter>
+      </AuthProvider>,
+    )
+
+    const link = await screen.findByRole('link', {
+      name: 'Administration : 3 demandes en attente',
+    })
+    expect(link).toHaveAttribute('href', '/admin')
+
+    // Après une action de l'administrateur, le compteur est relu.
+    stats.pendingProviders = 0
+    act(() => notifyAdminChange())
+    expect(await screen.findByRole('link', { name: 'Administration' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Espace prestataire' })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['voyageur', { _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' }],
+    [
+      'prestataire',
+      { _id: 'p1', name: 'Karim Jlassi', role: 'prestataire', provider: { approval: 'approuve' } },
+    ],
+    ['admin', { _id: 'a1', name: 'Admin Rehla', role: 'admin' }],
+  ])('propose « Mot de passe » à un compte %s', async (_role, account) => {
+    renderConnected(account)
+
+    expect(await screen.findByRole('link', { name: 'Mot de passe' })).toHaveAttribute(
+      'href',
+      '/mon-compte/mot-de-passe',
+    )
+  })
+
+  it('pas de lien « Mot de passe » pour un visiteur', () => {
+    renderWithRouter(<NavBar />)
+    expect(screen.queryByRole('link', { name: 'Mot de passe' })).not.toBeInTheDocument()
   })
 
   it('déconnecte l’utilisateur (y compris depuis le menu mobile)', async () => {

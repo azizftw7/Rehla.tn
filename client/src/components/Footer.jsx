@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth.js'
+import { canBecomeProvider } from '../lib/providerApproval.js'
 import Logo from './Logo.jsx'
 import './Footer.css'
 
@@ -13,7 +15,7 @@ const COLUMNS = [
   {
     title: 'Prestataires',
     links: [
-      { to: '/inscription?role=prestataire', label: 'Devenir prestataire' },
+      { to: '/inscription?role=prestataire', label: 'Devenir prestataire', becomeProvider: true },
       { to: '/connexion', label: 'Espace prestataire' },
     ],
   },
@@ -27,6 +29,9 @@ const COLUMNS = [
 ]
 
 export default function Footer() {
+  const session = useAuth()
+  const showBecomeProvider = canBecomeProvider(session)
+
   return (
     <footer className="footer">
       <div className="container footer__inner">
@@ -42,11 +47,13 @@ export default function Footer() {
           <nav key={column.title} className="footer__col" aria-label={column.title}>
             <h2 className="footer__title">{column.title}</h2>
             <ul role="list">
-              {column.links.map((link) => (
-                <li key={link.label}>
-                  <Link to={link.to}>{link.label}</Link>
-                </li>
-              ))}
+              {column.links
+                .filter((link) => !link.becomeProvider || showBecomeProvider)
+                .map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.to}>{link.label}</Link>
+                  </li>
+                ))}
             </ul>
           </nav>
         ))}

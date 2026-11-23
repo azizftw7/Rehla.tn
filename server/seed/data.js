@@ -20,6 +20,7 @@ export const users = [
       activityType: 'hebergement',
       city: 'Djerba',
       phone: '+216 00 000 101',
+      approval: 'approuve',
     },
   },
   {
@@ -32,6 +33,21 @@ export const users = [
       activityType: 'activite',
       city: 'Tozeur',
       phone: '+216 00 000 202',
+      approval: 'approuve',
+    },
+  },
+  // Demande prestataire à valider par l'administrateur (démo de l'US7.1).
+  {
+    key: 'prestataire3',
+    name: 'Sami Gharbi',
+    email: 'prestataire3@demo.rehla.tn',
+    role: 'prestataire',
+    provider: {
+      businessName: 'Dar Yasmine Kerkennah',
+      activityType: 'hebergement',
+      city: 'Sfax',
+      phone: '+216 00 000 303',
+      approval: 'en_attente',
     },
   },
   {

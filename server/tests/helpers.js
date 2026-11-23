@@ -11,6 +11,8 @@ const defaultsByRole = {
       activityType: 'hebergement',
       city: 'Tozeur',
       phone: '+216 70 000 000',
+      // Approuvé par défaut pour accéder à /api/provider ; createUser({ role, provider }) pour un autre cas.
+      approval: 'approuve',
     },
   },
   admin: {},

@@ -110,11 +110,11 @@ describe('US1.4 — espaces /api/provider et /api/admin', () => {
     expect(res.status).toBe(401);
   });
 
-  it('laisse passer le bon rôle (404 tant que la route n’existe pas)', async () => {
+  it('laisse passer le bon rôle', async () => {
     const admin = await createUser({ role: 'admin' });
 
     const res = await request(app).get('/api/admin/users').set(authHeader(admin));
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
   });
 });

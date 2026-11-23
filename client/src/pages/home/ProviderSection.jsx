@@ -1,6 +1,8 @@
 import { MessageSquareText, Sparkles, Store } from 'lucide-react'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
+import { canBecomeProvider } from '../../lib/providerApproval.js'
 
 const POINTS = [
   { icon: Store, text: 'Publiez vos services, vos photos et vos tarifs.' },
@@ -8,7 +10,15 @@ const POINTS = [
   { icon: MessageSquareText, text: 'Répondez aux avis des voyageurs.' },
 ]
 
+/**
+ * Section « Prestataires » de l'accueil : « Devenir prestataire » pour un visiteur ou un voyageur,
+ * « Mon espace prestataire » pour un prestataire connecté ; masquée pour l'administrateur.
+ */
 export default function ProviderSection() {
+  const session = useAuth()
+  const { user } = session
+  if (user?.role === 'admin') return null
+
   return (
     <section className="section" aria-labelledby="prestataires-titre">
       <div className="container">
@@ -34,9 +44,17 @@ export default function ProviderSection() {
             ))}
           </ul>
 
-          <Button to="/inscription?role=prestataire" variant="accent" size="lg">
-            Devenir prestataire
-          </Button>
+          {user?.role === 'prestataire' ? (
+            <Button to="/prestataire/services" variant="accent" size="lg" icon={Store}>
+              Mon espace prestataire
+            </Button>
+          ) : (
+            canBecomeProvider(session) && (
+              <Button to="/inscription?role=prestataire" variant="accent" size="lg">
+                Devenir prestataire
+              </Button>
+            )
+          )}
         </div>
       </div>
     </section>

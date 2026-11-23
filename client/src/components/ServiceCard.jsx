@@ -10,10 +10,10 @@ import './ServiceCard.css'
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat]))
 
 /**
- * Carte d'un service.
- * - to : cible du lien (par défaut la fiche publique) ;
- * - children : actions affichées en bas de la carte (ex. « Mes services » du prestataire) ;
- * - un service masqué (hidden) porte le badge « Masqué ».
+- Carte d'un service.
+- - to : cible du lien (par défaut la fiche publique) ;
+- - children : actions affichées en bas de la carte (ex. « Mes services » du prestataire) ;
+- - un service masqué (hidden) porte le badge « Masqué ».
  */
 export default function ServiceCard({ service, to, children }) {
   const {
@@ -67,17 +67,18 @@ export default function ServiceCard({ service, to, children }) {
             <Icon icon={CategoryIcon} size={40} />
           </div>
         )}
-        <span className="service-card__badge legende">
-          <Icon icon={CategoryIcon} size={14} />
-          {category?.label || type}
-        </span>
-        {hidden && (
-          <span className="service-card__badge service-card__badge--hidden legende">
-            <Icon icon={EyeOff} size={14} />
-            Masqué
-          </span>
-        )}
       </div>
+
+      <span className="service-card__badge legende">
+        <Icon icon={CategoryIcon} size={14} />
+        {category?.label || type}
+      </span>
+      {hidden && (
+        <span className="service-card__badge service-card__badge--hidden legende">
+          <Icon icon={EyeOff} size={14} />
+          Masqué
+        </span>
+      )}
 
       <div className="service-card__body">
         <div className="service-card__header">

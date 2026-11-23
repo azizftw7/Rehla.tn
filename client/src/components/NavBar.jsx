@@ -107,19 +107,23 @@ export default function NavBar() {
                     to="/prestataire/services"
                     variant="secondary"
                     icon={Store}
+                    className="navbar__btn navbar__btn--compact-lg"
+                    title="Espace prestataire"
                     onClick={closeMenu}
                   >
-                    Espace prestataire
+                    <span className="navbar__btn-label">Espace prestataire</span>
                   </Button>
                 ) : (
                   <Button
                     to="/prestataire/en-attente"
                     variant="secondary"
                     icon={Store}
+                    className="navbar__btn navbar__btn--compact-lg"
+                    title="Espace prestataire"
                     aria-label={`Espace prestataire : ${providerState}`}
                     onClick={closeMenu}
                   >
-                    Espace prestataire
+                    <span className="navbar__btn-label">Espace prestataire</span>
                     <span className="navbar__badge navbar__badge--attente">{providerState}</span>
                   </Button>
                 ))}
@@ -128,6 +132,8 @@ export default function NavBar() {
                   to="/admin"
                   variant="secondary"
                   icon={ShieldCheck}
+                  className="navbar__btn navbar__btn--compact-lg"
+                  title="Administration"
                   aria-label={
                     pendingProviders > 0
                       ? `Administration : ${pendingProviders} demande${pendingProviders > 1 ? 's' : ''} en attente`
@@ -135,7 +141,7 @@ export default function NavBar() {
                   }
                   onClick={closeMenu}
                 >
-                  Administration
+                  <span className="navbar__btn-label">Administration</span>
                   {pendingProviders > 0 && (
                     <span className="navbar__badge" title="Demandes prestataire en attente">
                       {pendingProviders}
@@ -143,23 +149,29 @@ export default function NavBar() {
                   )}
                 </Button>
               )}
+              {/* Sur ordinateur, ces deux boutons n'affichent que leur icône (libellé lu par les
+                  lecteurs d'écran, infobulle au survol) : la barre ne déborde pas. */}
               <Button
                 to="/mon-compte/mot-de-passe"
                 variant="ghost"
                 icon={KeyRound}
+                className="navbar__btn navbar__btn--compact"
+                title="Mot de passe"
                 onClick={closeMenu}
               >
-                Mot de passe
+                <span className="navbar__btn-label">Mot de passe</span>
               </Button>
               <Button
                 variant="ghost"
                 icon={LogOut}
+                className="navbar__btn navbar__btn--compact"
+                title="Déconnexion"
                 onClick={() => {
                   closeMenu()
                   logout()
                 }}
               >
-                Déconnexion
+                <span className="navbar__btn-label">Déconnexion</span>
               </Button>
             </div>
           ) : (

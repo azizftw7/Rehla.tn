@@ -153,7 +153,7 @@
     display: flex;
     flex: 1;
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-3);
     padding: 0;
     background: none;
     border: 0;
@@ -168,11 +168,13 @@
   }
 
   .navbar__link {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-2);
+    white-space: nowrap;
   }
 
   .navbar__actions {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
   }
 
@@ -181,7 +183,7 @@
   }
 
   .navbar__user-name {
-    max-width: 16ch;
+    max-width: 14ch;
   }
 
   .navbar__tools {
@@ -190,5 +192,69 @@
 
   .navbar__burger {
     display: none;
+  }
+}
+
+/* ---------- Boutons du compte en version icône (ordinateur) ----------
+   Le conteneur est limité à 1280px : avec « Administration » ou « Espace prestataire »,
+   « Mot de passe » et « Déconnexion » ne tiennent qu'en icône. Entre 1024px et 1279px,
+   Administration / Espace prestataire passent aussi en icône (leur pastille reste visible).
+   Le libellé reste lu par les lecteurs d'écran ; l'attribut title donne une infobulle. */
+
+/* 1024px = --bp-lg */
+@media (min-width: 1024px) {
+  .navbar__btn--compact {
+    gap: 0;
+    padding: var(--space-3);
+  }
+
+  .navbar__btn--compact .navbar__btn-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+/* 1024px = --bp-lg, 1279px = --bp-xl - 1 */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  /* Espacements resserrés : tout tient sur une ligne sans écraser le logo. */
+  .navbar__inner {
+    gap: var(--space-3);
+  }
+
+  .navbar__nav,
+  .navbar__nav[data-open='true'] {
+    gap: var(--space-2);
+  }
+
+  .navbar__links {
+    gap: 0;
+  }
+
+  .navbar__actions .btn--md {
+    padding-inline: var(--space-4);
+  }
+
+  .navbar__user-name {
+    max-width: 12ch;
+  }
+
+  .navbar__btn--compact-lg {
+    gap: 0;
+    padding-inline: var(--space-3);
+  }
+
+  .navbar__btn--compact-lg .navbar__btn-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 }

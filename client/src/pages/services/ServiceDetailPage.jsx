@@ -27,7 +27,9 @@ import {
   formatServicePrice,
   getYoutubeEmbedUrl,
 } from '../../lib/servicesApi.js'
+import { formatRating } from '../../lib/reviewsApi.js'
 import './ServiceDetailPage.css'
+import ServiceReviews from './ServiceReviews.jsx'
 
 // Leaflet n'est chargé que si la fiche a une localisation.
 const ServicesMap = lazy(() => import('../../components/ServicesMap.jsx'))
@@ -178,6 +180,8 @@ export default function ServiceDetailPage() {
     error: null,
   })
   const requestKey = `${id}:${reload}`
+  // Note à jour après la publication, la modification ou la suppression d'un avis (US3.5).
+  const [ratingSummary, setRatingSummary] = useState({ id: null, average: 0, count: 0 })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -263,6 +267,10 @@ export default function ServiceDetailPage() {
   const accommodationLabel =
     service.type === 'hebergement' ? getAccommodationLabel(service.accommodationType) : null
   const position = toLatLng(service.location)
+  const rating =
+    ratingSummary.id === id
+      ? ratingSummary
+      : { average: service.ratingAverage, count: service.ratingCount }
 
   return (
     <section
@@ -330,9 +338,13 @@ export default function ServiceDetailPage() {
 
                 <span className="service-detail__meta-item">
                   <Icon icon={Star} size={16} />
-                  {service.ratingCount > 0
-                    ? `${Number(service.ratingAverage).toFixed(1)} (${service.ratingCount} avis)`
-                    : 'Nouveau — aucun avis pour le moment'}
+                  {rating.count > 0 ? (
+                    <a href="#avis-titre" className="service-detail__rating-link">
+                      {formatRating(rating.average)} ({rating.count} avis)
+                    </a>
+                  ) : (
+                    'Nouveau — aucun avis pour le moment'
+                  )}
                 </span>
               </div>
             </header>
@@ -393,6 +405,15 @@ export default function ServiceDetailPage() {
                 </p>
               </div>
             )}
+
+            <ServiceReviews
+              key={service._id}
+              serviceId={service._id}
+              initialSummary={{ average: service.ratingAverage, count: service.ratingCount }}
+              onSummaryChange={(summary) =>
+                setRatingSummary({ id, average: summary.average, count: summary.count })
+              }
+            />
           </div>
 
           <aside className="service-detail__card" aria-label="Informations pratiques">

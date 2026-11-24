@@ -24,7 +24,7 @@ describe('npm run seed', () => {
     const count = (name) => db.collection(name).countDocuments();
 
     expect(await count('destinations')).toBe(3);
-    expect(await count('users')).toBe(7);
+    expect(await count('users')).toBe(10);
     expect(await db.collection('users').countDocuments({ role: 'admin' })).toBe(1);
     expect(await db.collection('users').countDocuments({ role: 'prestataire' })).toBe(3);
     // US7.1 : les prestataires qui ont des services sont approuvés, un troisième attend.
@@ -35,7 +35,7 @@ describe('npm run seed', () => {
       'prestataire2@demo.rehla.tn': 'approuve',
       'prestataire3@demo.rehla.tn': 'en_attente',
     });
-    expect(await db.collection('users').countDocuments({ role: 'voyageur' })).toBe(3);
+    expect(await db.collection('users').countDocuments({ role: 'voyageur' })).toBe(6);
     expect(await db.collection('services').distinct('type')).toEqual(
       expect.arrayContaining(['hebergement', 'restaurant', 'activite', 'evenement', 'guide']),
     );
@@ -47,8 +47,11 @@ describe('npm run seed', () => {
     expect(djerba.location.coordinates).toEqual([10.8575, 33.8758]);
 
     const reviewed = await db.collection('services').findOne({ name: 'Menzel des Palmes Bleues' });
-    expect(reviewed.ratingCount).toBe(2);
-    expect(reviewed.ratingAverage).toBe(4.5);
+    // US3.5 : 6 avis (5, 4, 5, 3, 4, 2) pour montrer la pagination ; moyenne arrondie à 0,1.
+    expect(reviewed.ratingCount).toBe(6);
+    expect(reviewed.ratingAverage).toBe(3.8);
+    const withoutComment = await db.collection('reviews').countDocuments({ comment: null });
+    expect(withoutComment).toBeGreaterThan(0);
 
     // US3.1 : chaque hébergement a un type, et au moins une offre en cours sur un hébergement.
     const lodgings = await db.collection('services').find({ type: 'hebergement' }).toArray();

@@ -1,0 +1,84 @@
+/* Étoiles de notation (US3.5). */
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--trait-fort);
+}
+
+.star-rating__star--on {
+  color: var(--safran);
+  fill: currentColor;
+}
+
+/* ---------- Choix de la note ---------- */
+
+.star-input {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.star-input__legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  color: var(--encre);
+}
+
+.star-input__stars {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.star-input__star {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  color: var(--trait-fort);
+  cursor: pointer;
+  transition:
+    color var(--duree-rapide) var(--ease-standard),
+    transform var(--duree-rapide) var(--ease-standard);
+}
+
+.star-input__star--on {
+  color: var(--safran);
+}
+
+.star-input__star--on svg {
+  fill: currentColor;
+}
+
+.star-input__star:hover {
+  transform: scale(1.1);
+}
+
+/* Le bouton radio est masqué : le focus clavier s'affiche sur l'étoile. */
+.star-input__star:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.star-input[aria-invalid='true'] .star-input__stars {
+  border-radius: var(--radius-md);
+  outline: 1px solid var(--danger);
+}
+
+.star-input__value {
+  margin-left: var(--space-2);
+  color: var(--encre-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-input__star {
+    transition: none;
+  }
+
+  .star-input__star:hover {
+    transform: none;
+  }
+}

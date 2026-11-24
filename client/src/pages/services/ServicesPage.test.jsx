@@ -83,7 +83,7 @@ describe('ServicesPage', () => {
       '/services/s1',
     )
     expect(within(cards[0]).getByText(/65 DT/)).toBeInTheDocument()
-    expect(within(cards[0]).getByText('4.8')).toBeInTheDocument()
+    expect(within(cards[0]).getByText('4,8')).toBeInTheDocument()
     expect(within(cards[0]).getByText('Fruits de mer')).toBeInTheDocument()
 
     expect(within(cards[1]).getAllByText('Gratuit')).toHaveLength(2)

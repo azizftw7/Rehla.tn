@@ -1,0 +1,96 @@
+/* Carte d'un avis (US3.5). */
+.review-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.review-card__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 48px;
+  background: var(--bleu-pale);
+  color: var(--bleu);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.review-card__author {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.review-card__name {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--encre-2);
+}
+
+.review-card__profile {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--lagune-pale);
+  color: var(--lagune);
+  font-weight: 600;
+}
+
+.review-card__comment {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.review-card__comment--empty {
+  color: var(--encre-2);
+  font-style: italic;
+}
+
+.review-card__reply {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--bleu);
+  border-radius: var(--radius-md);
+  background: var(--surface-alt);
+}
+
+.review-card__reply p {
+  margin: 0;
+}
+
+.review-card__reply-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--bleu);
+  font-weight: 600;
+}
+
+.review-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

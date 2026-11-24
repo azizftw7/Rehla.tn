@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getAccommodationLabel } from '../data/accommodationTypes.js'
 import { CATEGORIES } from '../data/categories.js'
+import { formatRating } from '../lib/reviewsApi.js'
 import { formatEventPeriod, formatServicePrice } from '../lib/servicesApi.js'
 import Icon from './Icon.jsx'
 import './ServiceCard.css'
@@ -88,9 +89,12 @@ export default function ServiceCard({ service, to, children }) {
             </Link>
           </h3>
           {ratingCount > 0 && (
-            <span className="service-card__rating texte-s" aria-label={`Note ${ratingAverage} sur 5`}>
+            <span
+              className="service-card__rating texte-s"
+              aria-label={`Note ${formatRating(ratingAverage)} sur 5 (${ratingCount} avis)`}
+            >
               <Icon icon={Star} size={15} />
-              {Number(ratingAverage).toFixed(1)}
+              {formatRating(ratingAverage)}
             </span>
           )}
         </div>

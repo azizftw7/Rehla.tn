@@ -71,6 +71,28 @@ export const users = [
     role: 'voyageur',
     profile: 'touriste',
   },
+  // Sprint 3 : plus de voyageurs pour la pagination des avis (US3.5) et les co-voyageurs (US5.4).
+  {
+    key: 'voyageur4',
+    name: 'Mehdi Jaziri',
+    email: 'voyageur4@demo.rehla.tn',
+    role: 'voyageur',
+    profile: 'etudiant',
+  },
+  {
+    key: 'voyageur5',
+    name: 'Sofia Rossi',
+    email: 'voyageur5@demo.rehla.tn',
+    role: 'voyageur',
+    profile: 'touriste',
+  },
+  {
+    key: 'voyageur6',
+    name: 'Nour Ayari',
+    email: 'voyageur6@demo.rehla.tn',
+    role: 'voyageur',
+    profile: 'resident',
+  },
 ];
 
 // Coordonnées réelles (centre-ville), au format GeoJSON [longitude, latitude].
@@ -392,6 +414,33 @@ export const reviews = [
     rating: 5,
     comment: 'Leïla connaît chaque pierre de Carthage.',
   },
+  // Sprint 3 (US3.5) : 6 avis sur le même hébergement pour montrer la pagination (5 par page).
+  {
+    service: 'djerba-hebergement',
+    author: 'voyageur2',
+    rating: 5,
+    comment: 'Petit-déjeuner copieux sur la terrasse, on reviendra.',
+  },
+  {
+    service: 'djerba-hebergement',
+    author: 'voyageur4',
+    rating: 3,
+    comment: 'Chambre propre, mais le wifi coupait souvent.',
+  },
+  { service: 'djerba-hebergement', author: 'voyageur5', rating: 4 },
+  {
+    service: 'djerba-hebergement',
+    author: 'voyageur6',
+    rating: 2,
+    comment: 'Accueil un peu froid à l’arrivée, chambre correcte sans plus.',
+  },
+  {
+    service: 'djerba-restaurant',
+    author: 'voyageur5',
+    rating: 5,
+    comment: 'Le meilleur couscous au poisson de l’île.',
+  },
+  { service: 'tozeur-activite', author: 'voyageur4', rating: 4, comment: 'Guide très patient.' },
 ];
 
 // Horaires et tarifs indicatifs pour la démo : ils ne proviennent pas des opérateurs.

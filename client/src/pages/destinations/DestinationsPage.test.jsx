@@ -7,10 +7,11 @@ import DestinationsPage from './DestinationsPage.jsx'
 
 // Leaflet ne fonctionne pas dans jsdom : la carte est remplacée par un composant qui expose ses props.
 vi.mock('../../components/DestinationsMap.jsx', () => ({
-  default: function DestinationsMapMock({ destinations, selectedSlug }) {
+  default: function DestinationsMapMock({ destinations, selectedSlug, linkQuery }) {
     return (
       <div
         data-testid="destinations-map"
+        data-link-query={linkQuery}
         data-destinations={destinations.map((d) => d.slug).join(',')}
         data-selected={selectedSlug ?? ''}
       />
@@ -117,7 +118,7 @@ describe('DestinationsPage', () => {
     await compactList()
     expect(map).toHaveAttribute('data-destinations', 'djerba')
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringMatching(/\/destinations\?search=djer&limit=100$/),
+      expect.stringMatching(/\/destinations\?search=djer&types=hebergement&limit=100$/),
       expect.any(Object),
     )
     const input = screen.getByLabelText('Rechercher une destination')
@@ -127,7 +128,10 @@ describe('DestinationsPage', () => {
     await user.type(input, 'tozeur')
     await user.click(screen.getByRole('button', { name: 'Rechercher' }))
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/destinations?search=tozeur')
+    // Une nouvelle recherche garde les types choisis.
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/destinations?search=tozeur&types=hebergement',
+    )
     expect(await screen.findByRole('link', { name: 'Tozeur' })).toBeInTheDocument()
     expect(
       await screen.findByRole('button', { name: 'Voir Tozeur sur la carte' }),
@@ -188,5 +192,65 @@ describe('DestinationsPage', () => {
     expect(await screen.findAllByRole('article')).toHaveLength(2)
     await compactList()
     expect(fetchMock).toHaveBeenCalledTimes(4)
+  })
+
+  describe('types choisis sur l’accueil (US2.3)', () => {
+    it('lit « types » dans l’URL, filtre les destinations et garde les types dans les liens', async () => {
+      const fetchMock = mockApi({ grid: [list([DESTINATIONS[1]])], map: [list([DESTINATIONS[1]])] })
+      renderPage('/destinations?search=to&types=guide,hebergement')
+
+      const link = await screen.findByRole('link', { name: 'Tozeur' })
+      expect(link).toHaveAttribute('href', '/destinations/tozeur?types=hebergement,guide')
+      expect(screen.getByTestId('destinations-map')).toHaveAttribute(
+        'data-link-query',
+        '?types=hebergement,guide',
+      )
+      const urls = fetchMock.mock.calls.map(([url]) => url)
+      expect(urls.every((url) => url.includes('search=to&types=hebergement%2Cguide'))).toBe(true)
+
+      const group = screen.getByRole('group', { name: 'Destinations qui proposent' })
+      expect(within(group).getByRole('button', { name: 'Guides locaux' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(within(group).getByRole('button', { name: 'Restaurants' })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      )
+    })
+
+    it('ajoute ou retire un type en gardant la recherche', async () => {
+      const user = userEvent.setup()
+      mockApi()
+      renderPage('/destinations?search=dj&types=hebergement&page=2')
+      await screen.findAllByRole('article')
+
+      const group = screen.getByRole('group', { name: 'Destinations qui proposent' })
+      await user.click(within(group).getByRole('button', { name: 'Transports' }))
+      expect(screen.getByTestId('location')).toHaveTextContent(
+        '/destinations?search=dj&types=hebergement%2Ctransport',
+      )
+
+      await user.click(within(group).getByRole('button', { name: 'Hébergements' }))
+      expect(screen.getByTestId('location')).toHaveTextContent(
+        '/destinations?search=dj&types=transport',
+      )
+    })
+
+    it('explique qu’aucune destination ne propose ces services', async () => {
+      const user = userEvent.setup()
+      mockApi({ grid: [list([]), list(DESTINATIONS)], map: [list([]), list(DESTINATIONS)] })
+      renderPage('/destinations?types=guide')
+
+      expect(
+        await screen.findByRole('heading', {
+          name: 'Aucune destination ne propose encore ces services',
+        }),
+      ).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Voir toutes les destinations' }))
+
+      expect(screen.getByTestId('location')).toHaveTextContent(/^\/destinations$/)
+      expect(await screen.findAllByRole('article')).toHaveLength(2)
+    })
   })
 })

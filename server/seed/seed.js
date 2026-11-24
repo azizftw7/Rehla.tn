@@ -85,7 +85,6 @@ async function seed() {
     data.transports.map((transport) => ({
       ...transport,
       destination: pick(destinations, transport.destination, 'destination')._id,
-      sourceUpdatedAt: new Date(),
     })),
   );
 

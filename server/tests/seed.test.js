@@ -42,6 +42,9 @@ describe('npm run seed', () => {
     expect(await count('offers')).toBeGreaterThan(0);
     expect(await count('reviews')).toBeGreaterThan(0);
     expect(await count('transports')).toBeGreaterThan(0);
+    // Date de relevé des données indicatives, et non la date d'exécution du seed.
+    const transportDates = await db.collection('transports').distinct('sourceUpdatedAt');
+    expect(transportDates).toEqual([new Date('2026-10-01T00:00:00.000Z')]);
 
     const djerba = await db.collection('destinations').findOne({ slug: 'djerba' });
     expect(djerba.location.coordinates).toEqual([10.8575, 33.8758]);

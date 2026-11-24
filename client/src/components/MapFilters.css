@@ -1,0 +1,52 @@
+/* Filtres multicritères de la carte (US2.3). Champs : classes de ServicesPage.css. */
+.map-filters {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.map-filters__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.map-filters__bar .services-page__tabs {
+  margin-bottom: 0;
+}
+
+.map-filters__toggle[aria-expanded='true'] {
+  border-color: var(--bleu);
+  color: var(--bleu);
+}
+
+.map-filters__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding-inline: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--bleu);
+  color: var(--on-bleu);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.map-filters__panel {
+  margin-bottom: 0;
+}
+
+.map-filters__panel[hidden] {
+  display: none;
+}
+
+.map-filters__error {
+  grid-column: 1 / -1;
+}
+
+.map-filters__reset {
+  justify-self: start;
+  align-self: end;
+}

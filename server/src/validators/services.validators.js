@@ -27,8 +27,35 @@ export const isoDate = (label, endOfDay) =>
       return new Date(value);
     });
 
+/**
+ * Liste de valeurs séparées par des virgules (« hebergement,restaurant ») ou paramètre répété
+ * (?types=a&types=b), convertie en tableau sans doublons ni valeurs vides.
+ * Chaque valeur doit appartenir à `allowed` (message d'erreur `error`, sur le champ lui-même).
+ */
+export const csvEnum = (allowed, { label, error }) =>
+  z.preprocess(
+    (value) => (Array.isArray(value) ? value.join(',') : value),
+    z
+      .string({ error: `${label} doivent être un texte.` })
+      .max(200, `${label} ne peuvent pas dépasser 200 caractères.`)
+      .transform((value) => [
+        ...new Set(
+          value
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean),
+        ),
+      ])
+      .refine((items) => items.every((item) => allowed.includes(item)), { error }),
+  );
+
 const listServicesObject = z.object({
   type: z.enum(SERVICE_TYPES, { error: 'Type de service invalide.' }).optional(),
+  // Plusieurs types à la fois (US2.3) : « types=hebergement,restaurant ».
+  types: csvEnum(SERVICE_TYPES, {
+    label: 'Les types',
+    error: `Type de service invalide (valeurs possibles : ${SERVICE_TYPES.join(', ')}).`,
+  }).optional(),
   destination: z
     .string({ error: 'La destination doit être un texte.' })
     .trim()
@@ -68,6 +95,11 @@ const listServicesObject = z.object({
   maxPrice: z.coerce
     .number({ error: 'Le prix maximum doit être un nombre.' })
     .min(0, 'Le prix maximum ne peut pas être négatif.')
+    .optional(),
+  minRating: z.coerce
+    .number({ error: 'La note minimale doit être un nombre.' })
+    .min(1, 'La note minimale doit être comprise entre 1 et 5.')
+    .max(5, 'La note minimale doit être comprise entre 1 et 5.')
     .optional(),
   ...paginationQuery,
 });

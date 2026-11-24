@@ -1,9 +1,10 @@
 import { MapPin, Search, X } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import DestinationCard, { DestinationCardSkeleton } from '../../components/DestinationCard.jsx'
 import Icon from '../../components/Icon.jsx'
+import { CATEGORIES } from '../../data/categories.js'
 import { fetchDestinations } from '../../lib/destinationsApi.js'
 import '../services/ServicesPage.css'
 import './DestinationsPage.css'
@@ -16,6 +17,13 @@ const PAGE_LIMIT = 12
 const MAP_LIMIT = 100
 const EMPTY_PAGE = { items: [], total: 0, page: 1, pages: 0 }
 const NO_DESTINATIONS = []
+const CATEGORY_TYPES = CATEGORIES.map((category) => category.type)
+
+/** Types choisis sur l'accueil (« ?types=hebergement,guide »), dans l'ordre des catégories. */
+function parseTypes(value) {
+  const raw = (value || '').split(',').map((item) => item.trim())
+  return CATEGORY_TYPES.filter((type) => raw.includes(type))
+}
 
 function prefersReducedMotion() {
   return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
@@ -24,6 +32,11 @@ function prefersReducedMotion() {
 export default function DestinationsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = (searchParams.get('search') || '').trim()
+  // Types choisis sur l'accueil (US2.3) : destinations qui en proposent au moins un.
+  const typesParam = parseTypes(searchParams.get('types')).join(',')
+  const types = useMemo(() => (typesParam ? typesParam.split(',') : []), [typesParam])
+  // Les liens vers une destination gardent ces types : la carte s'ouvre déjà filtrée.
+  const linkQuery = typesParam ? `?types=${typesParam}` : ''
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const mapRef = useRef(null)
 
@@ -33,48 +46,62 @@ export default function DestinationsPage() {
   const [mapState, setMapState] = useState({ key: null, items: NO_DESTINATIONS, error: null })
   const [selected, setSelected] = useState({ search: null, slug: null })
 
-  const gridKey = `${search}|${page}|${reload}`
-  const mapKey = `${search}|${reload}`
+  const gridKey = `${search}|${typesParam}|${page}|${reload}`
+  const mapKey = `${search}|${typesParam}|${reload}`
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchDestinations({ search, page, limit: PAGE_LIMIT }, { signal: controller.signal })
+    fetchDestinations({ search, types, page, limit: PAGE_LIMIT }, { signal: controller.signal })
       .then((res) => setGridState({ key: gridKey, data: res, error: null }))
       .catch((err) => {
         if (err.name === 'AbortError') return
         setGridState({ key: gridKey, data: EMPTY_PAGE, error: err.message })
       })
     return () => controller.abort()
-  }, [search, page, gridKey])
+  }, [search, types, page, gridKey])
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchDestinations({ search, limit: MAP_LIMIT }, { signal: controller.signal })
+    fetchDestinations({ search, types, limit: MAP_LIMIT }, { signal: controller.signal })
       .then((res) => setMapState({ key: mapKey, items: res.items || NO_DESTINATIONS, error: null }))
       .catch((err) => {
         if (err.name === 'AbortError') return
         setMapState({ key: mapKey, items: NO_DESTINATIONS, error: err.message })
       })
     return () => controller.abort()
-  }, [search, mapKey])
+  }, [search, types, mapKey])
 
   const gridLoading = gridState.key !== gridKey
   const mapLoading = mapState.key !== mapKey
   const { data, error } = gridState
   const found = mapLoading ? NO_DESTINATIONS : mapState.items
   // La sélection ne vaut que pour la recherche en cours.
-  const selectedSlug = selected.search === search ? selected.slug : null
+  const selectedSlug = selected.search === `${search}|${typesParam}` ? selected.slug : null
 
   const handleSubmit = (event) => {
     event.preventDefault()
     const text = new FormData(event.currentTarget).get('search')?.toString().trim()
-    setSearchParams(text ? { search: text } : {})
+    updateParams({ search: text, types: typesParam })
   }
 
-  const clearSearch = () => setSearchParams({})
+  /** Nouvelle recherche : la pagination repart de la page 1. */
+  const updateParams = ({ search: nextSearch, types: nextTypes }) => {
+    const params = {}
+    if (nextSearch) params.search = nextSearch
+    if (nextTypes) params.types = nextTypes
+    setSearchParams(params)
+  }
+
+  const toggleType = (type) => {
+    const next = types.includes(type) ? types.filter((item) => item !== type) : [...types, type]
+    updateParams({ search, types: CATEGORY_TYPES.filter((t) => next.includes(t)).join(',') })
+  }
+
+  const clearSearch = () => updateParams({ types: typesParam })
+  const clearAll = () => setSearchParams({})
   const retry = () => setReload((n) => n + 1)
 
-  const selectDestination = (slug) => setSelected({ search, slug })
+  const selectDestination = (slug) => setSelected({ search: `${search}|${typesParam}`, slug })
 
   const showOnMap = (slug) => {
     selectDestination(slug)
@@ -127,6 +154,26 @@ export default function DestinationsPage() {
                 Rechercher
               </Button>
             </form>
+
+            <div
+              className="services-page__tabs destinations-page__types"
+              role="group"
+              aria-label="Destinations qui proposent"
+            >
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category.type}
+                  type="button"
+                  className="services-page__tab label"
+                  style={{ '--tab-accent': `var(${category.color})` }}
+                  aria-pressed={types.includes(category.type)}
+                  onClick={() => toggleType(category.type)}
+                >
+                  <Icon icon={category.icon} size={16} />
+                  {category.title}
+                </button>
+              ))}
+            </div>
 
             <div className="destinations-page__found">
               <h2 id="destinations-trouvees" className="destinations-page__found-title label">
@@ -190,6 +237,7 @@ export default function DestinationsPage() {
                 destinations={found}
                 selectedSlug={selectedSlug}
                 onSelect={selectDestination}
+                linkQuery={linkQuery}
               />
             </Suspense>
           </div>
@@ -203,9 +251,9 @@ export default function DestinationsPage() {
                 ? ''
                 : `${data.total} destination${data.total > 1 ? 's' : ''}`}
           </p>
-          {search && (
-            <Button type="button" variant="ghost" icon={X} size="sm" onClick={clearSearch}>
-              Effacer la recherche
+          {(search || types.length > 0) && (
+            <Button type="button" variant="ghost" icon={X} size="sm" onClick={clearAll}>
+              {types.length > 0 ? 'Effacer la recherche et les filtres' : 'Effacer la recherche'}
             </Button>
           )}
         </div>
@@ -233,16 +281,25 @@ export default function DestinationsPage() {
             <h3 className="titre-4">
               {search
                 ? `Aucune destination ne correspond à « ${search} »`
-                : 'Aucune destination pour le moment'}
+                : types.length > 0
+                  ? 'Aucune destination ne propose encore ces services'
+                  : 'Aucune destination pour le moment'}
             </h3>
             <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
               {search
                 ? 'Vérifiez l’orthographe ou essayez un autre nom.'
-                : 'De nouvelles destinations sont ajoutées régulièrement.'}
+                : types.length > 0
+                  ? 'Retirez un type de service pour voir plus de destinations.'
+                  : 'De nouvelles destinations sont ajoutées régulièrement.'}
             </p>
             {search && (
               <Button type="button" variant="secondary" onClick={clearSearch}>
                 Effacer la recherche
+              </Button>
+            )}
+            {!search && types.length > 0 && (
+              <Button type="button" variant="secondary" onClick={clearAll}>
+                Voir toutes les destinations
               </Button>
             )}
           </div>
@@ -251,7 +308,7 @@ export default function DestinationsPage() {
             <ul className="destinations-page__grid" role="list">
               {data.items.map((destination) => (
                 <li key={destination._id}>
-                  <DestinationCard destination={destination} />
+                  <DestinationCard destination={destination} linkQuery={linkQuery} />
                 </li>
               ))}
             </ul>

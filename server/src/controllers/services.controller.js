@@ -5,9 +5,43 @@ import { escapeRegex } from '../utils/text.js';
 
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
 
+/**
+ * Un filtre propre à un type (type d'hébergement, catégorie d'activité, période…) ne restreint
+ * que ce type : avec « hébergements + restaurants » et le type « dar », on voit les dars et
+ * tous les restaurants (US2.3).
+ */
+function onlyForType(serviceType, criteria) {
+  return { $or: [{ type: { $ne: serviceType } }, { type: serviceType, ...criteria }] };
+}
+
+/** Critères des événements : type d'événement et chevauchement de la période [from, to]. */
+function eventCriteria({ eventType, from, to }) {
+  const criteria = {};
+  if (eventType) {
+    criteria['event.eventType'] = { $regex: `^${escapeRegex(eventType)}$`, $options: 'i' };
+  }
+  // Un événement correspond à la période s'il la chevauche :
+  // début <= to ET fin (ou début si pas de fin) >= from.
+  if (to) {
+    criteria['event.startDate'] = { $lte: to };
+  }
+  if (from) {
+    criteria.$or = [
+      { 'event.endDate': { $gte: from } },
+      { 'event.endDate': null, 'event.startDate': { $gte: from } },
+    ];
+  }
+  return criteria;
+}
+
+/**
+ * GET /api/services?type=|types=a,b&destination=&search=&cuisine=&activityCategory=
+ *   &accommodationType=&eventType=&from=&to=&free=&maxPrice=&minRating=&page=&limit=
+ */
 export async function listServices(req, res) {
   const {
     type,
+    types,
     destination,
     search,
     cuisine,
@@ -18,14 +52,20 @@ export async function listServices(req, res) {
     to,
     free,
     maxPrice,
+    minRating,
     page,
     limit,
   } = req.validated.query;
 
   const filter = { hidden: false };
+  const conditions = [];
 
-  if (type) {
-    filter.type = type;
+  // « type » (un seul) reste accepté : il s'ajoute aux « types ».
+  const selectedTypes = [...new Set([...(types ?? []), ...(type ? [type] : [])])];
+  if (selectedTypes.length === 1) {
+    [filter.type] = selectedTypes;
+  } else if (selectedTypes.length > 1) {
+    filter.type = { $in: selectedTypes };
   }
 
   if (destination) {
@@ -50,53 +90,47 @@ export async function listServices(req, res) {
   }
 
   if (cuisine) {
-    filter.cuisine = { $regex: escapeRegex(cuisine), $options: 'i' };
+    conditions.push(
+      onlyForType('restaurant', { cuisine: { $regex: escapeRegex(cuisine), $options: 'i' } }),
+    );
   }
 
   if (activityCategory) {
-    filter.activityCategory = { $regex: escapeRegex(activityCategory), $options: 'i' };
+    conditions.push(
+      onlyForType('activite', {
+        activityCategory: { $regex: escapeRegex(activityCategory), $options: 'i' },
+      }),
+    );
   }
 
   if (accommodationType) {
-    filter.accommodationType = accommodationType;
+    conditions.push(onlyForType('hebergement', { accommodationType }));
   }
 
-  if (eventType) {
-    filter['event.eventType'] = { $regex: `^${escapeRegex(eventType)}$`, $options: 'i' };
-  }
-
-  // Un événement correspond à la période s'il la chevauche :
-  // début <= to ET fin (ou début si pas de fin) >= from.
-  if (to) {
-    filter['event.startDate'] = { $lte: to };
-  }
-  if (from) {
-    filter.$and = [
-      ...(filter.$and || []),
-      {
-        $or: [
-          { 'event.endDate': { $gte: from } },
-          { 'event.endDate': null, 'event.startDate': { $gte: from } },
-        ],
-      },
-    ];
+  if (eventType || from || to) {
+    conditions.push(onlyForType('evenement', eventCriteria({ eventType, from, to })));
   }
 
   if (free === true) {
     filter.free = true;
   } else if (maxPrice !== undefined) {
-    filter.$and = [
-      ...(filter.$and || []),
-      { $or: [{ free: true }, { 'price.amount': { $lte: maxPrice } }] },
-    ];
+    conditions.push({ $or: [{ free: true }, { 'price.amount': { $lte: maxPrice } }] });
+  }
+
+  if (minRating !== undefined) {
+    filter.ratingAverage = { $gte: minRating };
+  }
+
+  if (conditions.length > 0) {
+    filter.$and = conditions;
   }
 
   const result = await paginate(Service, filter, {
     page,
     limit,
-    // Les événements s'affichent dans l'ordre chronologique.
+    // Les événements seuls s'affichent dans l'ordre chronologique.
     sort:
-      type === 'evenement'
+      selectedTypes.length === 1 && selectedTypes[0] === 'evenement'
         ? { 'event.startDate': 1, _id: 1 }
         : { ratingAverage: -1, createdAt: -1 },
     populate: { path: 'destination', select: 'name slug region' },

@@ -56,12 +56,14 @@ function PopupMedia({ src, name }) {
  * - destinations : réponse de GET /api/destinations (location GeoJSON [longitude, latitude])
  * - selectedSlug : destination à mettre en avant (la carte s'y déplace et ouvre sa bulle)
  * - onSelect : appelé quand on clique sur un marqueur
+ * - linkQuery : paramètres ajoutés au lien « Voir la carte » (ex. « ?types=guide »)
  */
 export default function DestinationsMap({
   destinations = NO_DESTINATIONS,
   selectedSlug,
   onSelect,
   label,
+  linkQuery = '',
 }) {
   const markersRef = useRef(new Map())
 
@@ -113,7 +115,11 @@ export default function DestinationsMap({
                 {destination.description && (
                   <p className="destinations-map__description texte-s">{destination.description}</p>
                 )}
-                <Button to={`/destinations/${destination.slug}`} variant="primary" size="sm">
+                <Button
+                  to={`/destinations/${destination.slug}${linkQuery}`}
+                  variant="primary"
+                  size="sm"
+                >
                   Explorer {destination.name}
                 </Button>
               </div>

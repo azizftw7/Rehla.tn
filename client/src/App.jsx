@@ -21,6 +21,7 @@ import ProviderPendingPage from './pages/provider/ProviderPendingPage.jsx'
 import ProviderReviewsPage from './pages/provider/ProviderReviewsPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
 import ServicesPage from './pages/services/ServicesPage.jsx'
+import TripSharePage from './pages/tripShare/TripSharePage.jsx'
 
 export default function App() {
   return (
@@ -59,6 +60,15 @@ export default function App() {
             <Route path="prestataire/avis" element={<ProviderReviewsPage />} />
           </Route>
         </Route>
+        {/* US5.3 / US5.4 : un visiteur est envoyé vers la connexion, puis ramené ici. */}
+        <Route
+          path="partage"
+          element={
+            <ProtectedRoute roles={['voyageur']}>
+              <TripSharePage />
+            </ProtectedRoute>
+          }
+        />
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="admin" element={<AdminDashboardPage />} />
           <Route path="admin/utilisateurs" element={<AdminUsersPage />} />

@@ -14,6 +14,7 @@ import {
   User,
 } from '../src/models/index.js';
 import * as data from './data.js';
+import { dayFromToday, tripShares } from './tripShares.js';
 
 const MODELS = [User, Destination, Service, Offer, Review, Favorite, TripShare, Transport];
 
@@ -95,6 +96,17 @@ async function seed() {
     })),
   );
 
+  for (const { user, destination, start, end, ...share } of tripShares) {
+    // create() : le hook pre('validate') calcule expiresAt (suppression après le retour).
+    await TripShare.create({
+      ...share,
+      user: pick(users, user, 'utilisateur')._id,
+      destination: pick(destinations, destination, 'destination')._id,
+      startDate: dayFromToday(start),
+      endDate: dayFromToday(end),
+    });
+  }
+
   console.log(
     [
       'Seed terminé :',
@@ -103,6 +115,7 @@ async function seed() {
       `- ${services.size} services, ${data.offers.length} offres, ${data.reviews.length} avis`,
       `- ${data.favorites.length} favoris`,
       `- ${data.transports.length} transports`,
+      `- ${tripShares.length} partages de voyage`,
       '',
       'Comptes de démo :',
       ...data.users.map((user) => `  ${user.role.padEnd(12)} ${user.email}`),

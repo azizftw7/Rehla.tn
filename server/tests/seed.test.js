@@ -48,6 +48,18 @@ describe('npm run seed', () => {
 
     const djerba = await db.collection('destinations').findOne({ slug: 'djerba' });
     expect(djerba.location.coordinates).toEqual([10.8575, 33.8758]);
+    // US5.3 / US5.4 : voyageur1 partage un séjour à Djerba, 4 autres voyageurs y sont en même temps.
+    const sharer = await db.collection('users').findOne({ email: 'voyageur1@demo.rehla.tn' });
+    const share = await db.collection('tripshares').findOne({ user: sharer._id });
+    expect(share.destination).toEqual(djerba._id);
+    expect(share.expiresAt.getTime()).toBe(share.endDate.getTime() + 24 * 60 * 60 * 1000);
+    const coTravelers = await db.collection('tripshares').countDocuments({
+      user: { $ne: sharer._id },
+      destination: share.destination,
+      startDate: { $lte: share.endDate },
+      endDate: { $gte: share.startDate },
+    });
+    expect(coTravelers).toBe(4);
 
     const reviewed = await db.collection('services').findOne({ name: 'Menzel des Palmes Bleues' });
     // US3.5 : 6 avis (5, 4, 5, 3, 4, 2) pour montrer la pagination ; moyenne arrondie à 0,1.

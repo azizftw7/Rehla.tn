@@ -1,0 +1,138 @@
+/* Carte voyageur (US5.3, US5.4) : même style que la carte d'exemple de l'accueil (.annonce). */
+.traveler-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-6);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform var(--duree-base) var(--ease-sortie),
+    box-shadow var(--duree-base) var(--ease-sortie);
+}
+
+.traveler-card:hover {
+  transform: translateY(calc(-1 * var(--space-1)));
+  box-shadow: var(--shadow-lg);
+}
+
+.traveler-card p {
+  margin: 0;
+}
+
+.traveler-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.traveler-card__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 56px;
+  overflow: hidden;
+  background: var(--bougainvillier);
+  color: var(--on-bougainvillier);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.traveler-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.traveler-card__who {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.traveler-card__name {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.traveler-card__profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--encre-2);
+}
+
+.traveler-card__badge {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--lagune-pale);
+  color: var(--lagune);
+  font-weight: 600;
+}
+
+.traveler-card__city {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.traveler-card__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--encre);
+  font-weight: 500;
+}
+
+.traveler-card__line svg {
+  flex: none;
+  color: var(--bleu);
+}
+
+.traveler-card__line--common {
+  color: var(--bougainvillier);
+}
+
+.traveler-card__line--common svg {
+  color: var(--bougainvillier);
+}
+
+.traveler-card__message {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-alt);
+  color: var(--encre);
+  overflow-wrap: anywhere;
+}
+
+.traveler-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.traveler-card__tag {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--lagune-pale);
+  color: var(--lagune);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .traveler-card,
+  .traveler-card:hover {
+    transform: none;
+    transition: none;
+  }
+}

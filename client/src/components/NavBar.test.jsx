@@ -251,3 +251,24 @@ describe('NavBar — navigation', () => {
     expect(burger).toHaveAttribute('aria-expanded', 'false')
   })
 })
+
+describe('NavBar — partage de voyage (US5.3)', () => {
+  it('propose « Partage de voyage » aux voyageurs', async () => {
+    renderConnected({ _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' })
+    expect(await screen.findByRole('link', { name: 'Partage de voyage' })).toHaveAttribute(
+      'href',
+      '/partage',
+    )
+  })
+
+  it('ne le propose ni aux prestataires ni à l’administrateur', async () => {
+    renderConnected({
+      _id: 'p1',
+      name: 'Karim Jlassi',
+      role: 'prestataire',
+      provider: { approval: 'approuve' },
+    })
+    await screen.findByRole('link', { name: 'Espace prestataire' })
+    expect(screen.queryByRole('link', { name: 'Partage de voyage' })).not.toBeInTheDocument()
+  })
+})

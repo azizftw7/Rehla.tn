@@ -16,6 +16,7 @@ import EditServicePage from './pages/provider/EditServicePage.jsx'
 import MyServicesPage from './pages/provider/MyServicesPage.jsx'
 import NewServicePage from './pages/provider/NewServicePage.jsx'
 import ProviderPendingPage from './pages/provider/ProviderPendingPage.jsx'
+import ProviderReviewsPage from './pages/provider/ProviderReviewsPage.jsx'
 import ServiceDetailPage from './pages/services/ServiceDetailPage.jsx'
 import ServicesPage from './pages/services/ServicesPage.jsx'
 
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="prestataire/services" element={<MyServicesPage />} />
             <Route path="prestataire/services/nouveau" element={<NewServicePage />} />
             <Route path="prestataire/services/:id/modifier" element={<EditServicePage />} />
+            <Route path="prestataire/avis" element={<ProviderReviewsPage />} />
           </Route>
         </Route>
         <Route element={<ProtectedRoute roles={['admin']} />}>

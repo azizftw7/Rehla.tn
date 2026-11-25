@@ -36,3 +36,34 @@ export const reviewIdSchema = z.object({
 });
 
 export const listReviewsSchema = z.object({ ...paginationQuery });
+
+// ---------- US6.4 : réponse du prestataire ----------
+
+export const MAX_REPLY_LENGTH = 1000;
+
+export const replySchema = z.object({
+  text: z
+    .string({ error: 'Écrivez votre réponse.' })
+    .trim()
+    .min(1, 'Écrivez votre réponse.')
+    .max(MAX_REPLY_LENGTH, `La réponse ne peut pas dépasser ${MAX_REPLY_LENGTH} caractères.`),
+});
+
+const emptyToUndefined = (value) =>
+  typeof value === 'string' && value.trim() === '' ? undefined : value;
+
+// GET /api/provider/reviews : avis reçus, filtrables par service et « sans réponse ».
+export const providerReviewsQuerySchema = z.object({
+  service: z.preprocess(
+    emptyToUndefined,
+    z.string().trim().regex(OBJECT_ID_REGEX, 'Identifiant de service invalide.').optional(),
+  ),
+  unanswered: z.preprocess(
+    emptyToUndefined,
+    z
+      .enum(['true', 'false'], { error: 'Le filtre « sans réponse » doit être vrai ou faux.' })
+      .transform((value) => value === 'true')
+      .optional(),
+  ),
+  ...paginationQuery,
+});

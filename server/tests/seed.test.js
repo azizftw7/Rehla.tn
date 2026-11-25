@@ -53,6 +53,13 @@ describe('npm run seed', () => {
     const withoutComment = await db.collection('reviews').countDocuments({ comment: null });
     expect(withoutComment).toBeGreaterThan(0);
 
+    // US6.4 : des avis avec une réponse du prestataire, d'autres encore sans réponse.
+    const replied = await db
+      .collection('reviews')
+      .countDocuments({ 'providerReply.text': { $type: 'string' } });
+    expect(replied).toBe(3);
+    expect(await count('reviews')).toBeGreaterThan(replied);
+
     // US3.1 : chaque hébergement a un type, et au moins une offre en cours sur un hébergement.
     const lodgings = await db.collection('services').find({ type: 'hebergement' }).toArray();
     expect(lodgings.every((s) => s.accommodationType)).toBe(true);

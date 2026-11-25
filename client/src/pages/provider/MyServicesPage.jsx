@@ -1,4 +1,4 @@
-import { CircleCheck, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react'
+import { CircleCheck, Eye, EyeOff, MessageSquareText, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
@@ -143,9 +143,14 @@ export default function MyServicesPage() {
               Modifiez vos fiches, masquez-les le temps d’une fermeture ou supprimez-les.
             </p>
           </div>
-          <Button to="/prestataire/services/nouveau" variant="accent" icon={Plus}>
-            Publier un service
-          </Button>
+          <div className="mes-services__header-actions">
+            <Button to="/prestataire/avis" variant="secondary" icon={MessageSquareText}>
+              Avis reçus
+            </Button>
+            <Button to="/prestataire/services/nouveau" variant="accent" icon={Plus}>
+              Publier un service
+            </Button>
+          </div>
         </header>
 
         {notice && (

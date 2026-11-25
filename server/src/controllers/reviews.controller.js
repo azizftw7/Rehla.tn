@@ -136,3 +136,112 @@ export async function deleteReview(req, res) {
   await review.deleteOne();
   res.status(204).end();
 }
+
+// ---------- US6.4 : le prestataire répond aux avis sur ses services ----------
+
+const NO_REPLY_FILTER = { 'providerReply.text': { $in: [null, ''] } };
+
+/** Avis reçu par le prestataire, avec le service lu à part (le hook de save() attend un id). */
+function toProviderReview(review, service) {
+  return {
+    ...toPublicReview(review),
+    service: { _id: service._id, name: service.name, hidden: service.hidden },
+  };
+}
+
+/**
+ * Avis sur un service du prestataire connecté : 404 si l'avis n'existe pas,
+ * 403 si le service appartient à un autre prestataire.
+ */
+async function findReceivedReview(req) {
+  const review = await Review.findById(req.validated.params.id);
+  if (!review) {
+    throw ApiError.notFound('Avis introuvable.');
+  }
+  const service = await Service.findById(review.service).select('provider name hidden');
+  if (!service?.provider.equals(req.user._id)) {
+    throw ApiError.forbidden('Vous ne pouvez répondre qu’aux avis laissés sur vos services.');
+  }
+  return { review, service };
+}
+
+/** Enregistre la réponse sans toucher à updatedAt : l'avis n'apparaît pas « modifié ». */
+async function saveReply(review, service, reply) {
+  review.providerReply = reply;
+  await review.save({ timestamps: false });
+  await review.populate('author', AUTHOR_FIELDS);
+  return toProviderReview(review, service);
+}
+
+/**
+ * GET /api/provider/reviews?service=&unanswered=true&page=&limit= (prestataire)
+ * Avis laissés sur ses services (masqués compris), plus récents d'abord.
+ * → { items, total, page, pages, unansweredCount }
+ */
+export async function listReceivedReviews(req, res) {
+  const { service, unanswered, page, limit } = req.validated.query;
+
+  const services = await Service.find({ provider: req.user._id }).select('name hidden');
+  const ownIds = services.map((s) => s._id);
+  if (service && !ownIds.some((id) => id.equals(service))) {
+    throw ApiError.notFound('Service introuvable.');
+  }
+
+  const base = {
+    service: service ? new mongoose.Types.ObjectId(String(service)) : { $in: ownIds },
+  };
+  const filter = unanswered ? { ...base, ...NO_REPLY_FILTER } : base;
+
+  const [result, unansweredCount] = await Promise.all([
+    paginate(Review, filter, {
+      page,
+      limit,
+      sort: { createdAt: -1, _id: -1 },
+      populate: { path: 'author', select: AUTHOR_FIELDS },
+    }),
+    Review.countDocuments({ ...base, ...NO_REPLY_FILTER }),
+  ]);
+
+  const byId = new Map(services.map((s) => [String(s._id), s]));
+  res.json({
+    ...result,
+    items: result.items.map((review) => toProviderReview(review, byId.get(String(review.service)))),
+    unansweredCount,
+  });
+}
+
+/** POST /api/provider/reviews/:id/reply { text } → 201 { review }. Une seule réponse (409). */
+export async function createReply(req, res) {
+  const { review, service } = await findReceivedReview(req);
+  if (review.providerReply?.text) {
+    throw ApiError.conflict('Vous avez déjà répondu à cet avis. Modifiez votre réponse si besoin.');
+  }
+  const result = await saveReply(review, service, {
+    text: req.validated.body.text,
+    repliedAt: new Date(),
+  });
+  res.status(201).json({ review: result });
+}
+
+/** PATCH /api/provider/reviews/:id/reply { text } → { review } (404 s'il n'y a pas de réponse). */
+export async function updateReply(req, res) {
+  const { review, service } = await findReceivedReview(req);
+  if (!review.providerReply?.text) {
+    throw ApiError.notFound('Vous n’avez pas encore répondu à cet avis.');
+  }
+  const result = await saveReply(review, service, {
+    text: req.validated.body.text,
+    repliedAt: new Date(),
+  });
+  res.json({ review: result });
+}
+
+/** DELETE /api/provider/reviews/:id/reply → 204 (404 s'il n'y a pas de réponse). */
+export async function deleteReply(req, res) {
+  const { review, service } = await findReceivedReview(req);
+  if (!review.providerReply?.text) {
+    throw ApiError.notFound('Vous n’avez pas encore répondu à cet avis.');
+  }
+  await saveReply(review, service, undefined);
+  res.status(204).end();
+}

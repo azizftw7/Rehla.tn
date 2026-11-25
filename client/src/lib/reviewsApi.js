@@ -61,3 +61,38 @@ export function isEdited(review) {
   const updated = new Date(review?.updatedAt).getTime()
   return Number.isFinite(created) && Number.isFinite(updated) && updated - created > 60_000
 }
+
+// ---------- US6.4 : avis reçus par le prestataire et ses réponses ----------
+
+export const MAX_REPLY_LENGTH = 1000
+export const PROVIDER_REVIEWS_PAGE_SIZE = 10
+
+const replyPath = (reviewId) => `/provider/reviews/${encodeURIComponent(reviewId)}/reply`
+
+/**
+ * GET /api/provider/reviews?page&limit&unanswered (prestataire)
+ * → { items, total, page, pages, unansweredCount } ; chaque avis porte service { _id, name, hidden }.
+ */
+export function fetchReceivedReviews(
+  { page = 1, limit = PROVIDER_REVIEWS_PAGE_SIZE, unanswered = false } = {},
+  options = {},
+) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (unanswered) query.set('unanswered', 'true')
+  return apiGet(`/provider/reviews?${query}`, options)
+}
+
+/** POST /api/provider/reviews/:id/reply { text } → { review } (409 si une réponse existe). */
+export function createReply(reviewId, text, options = {}) {
+  return apiPost(replyPath(reviewId), { text }, options)
+}
+
+/** PATCH /api/provider/reviews/:id/reply { text } → { review }. */
+export function updateReply(reviewId, text, options = {}) {
+  return apiPatch(replyPath(reviewId), { text }, options)
+}
+
+/** DELETE /api/provider/reviews/:id/reply (204). */
+export function deleteReply(reviewId, options = {}) {
+  return apiDelete(replyPath(reviewId), options)
+}

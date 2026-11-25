@@ -394,12 +394,22 @@ export const reviews = [
     rating: 4,
     comment: 'Très calme, un peu loin du centre.',
   },
-  { service: 'djerba-restaurant', author: 'voyageur2', rating: 4, comment: 'Poisson très frais.' },
+  // US6.4 : quelques avis ont déjà une réponse du prestataire, les autres attendent la sienne.
+  {
+    service: 'djerba-restaurant',
+    author: 'voyageur2',
+    rating: 4,
+    comment: 'Poisson très frais.',
+    providerReply: {
+      text: 'Merci Youssef ! Le poisson arrive chaque matin du port de Houmt Souk.',
+    },
+  },
   {
     service: 'tozeur-activite',
     author: 'voyageur3',
     rating: 5,
     comment: 'Coucher de soleil inoubliable.',
+    providerReply: { text: 'Merci Claire, revenez pour la balade de pleine lune !' },
   },
   {
     service: 'tozeur-hebergement',

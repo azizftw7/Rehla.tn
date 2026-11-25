@@ -73,3 +73,10 @@
     align-items: end;
   }
 }
+
+/* US6.4 : « Avis reçus » à côté de « Publier un service ». */
+.mes-services__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

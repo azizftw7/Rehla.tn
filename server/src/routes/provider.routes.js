@@ -7,6 +7,12 @@ import {
   setServiceVisibility,
   updateService,
 } from '../controllers/provider.controller.js';
+import {
+  createReply,
+  deleteReply,
+  listReceivedReviews,
+  updateReply,
+} from '../controllers/reviews.controller.js';
 import { uploadPhotos } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
 import {
@@ -15,6 +21,11 @@ import {
   updateServiceSchema,
   visibilitySchema,
 } from '../validators/provider.validators.js';
+import {
+  providerReviewsQuerySchema,
+  replySchema,
+  reviewIdSchema,
+} from '../validators/reviews.validators.js';
 import { serviceIdSchema } from '../validators/services.validators.js';
 
 // Routes de l'espace prestataire (/api/provider).
@@ -42,5 +53,12 @@ router.patch(
   setServiceVisibility,
 );
 router.delete('/services/:id', validate(byId), deleteService);
+
+// Avis reçus sur ses services et réponse du prestataire (US6.4) : une seule réponse par avis.
+const byReviewId = { params: reviewIdSchema };
+router.get('/reviews', validate({ query: providerReviewsQuerySchema }), listReceivedReviews);
+router.post('/reviews/:id/reply', validate({ ...byReviewId, body: replySchema }), createReply);
+router.patch('/reviews/:id/reply', validate({ ...byReviewId, body: replySchema }), updateReply);
+router.delete('/reviews/:id/reply', validate(byReviewId), deleteReply);
 
 export default router;

@@ -7,15 +7,25 @@ import './ReviewCard.css'
 
 /**
  * Un avis (US3.5) : auteur (prénom et initiale, profil), date, note, commentaire,
- * et la réponse du prestataire s'il y en a une. `actions` : boutons affichés en bas (son avis).
+ * et la réponse du prestataire s'il y en a une (US6.4).
+ * - actions : boutons affichés en bas (son avis, ou « Répondre » pour le prestataire)
+ * - replyActions : boutons affichés dans le bloc de la réponse (modifier, supprimer)
+ * - hideReply : masque la réponse (pendant sa modification, le formulaire la remplace)
  */
-export default function ReviewCard({ review, actions, headingLevel = 3 }) {
+export default function ReviewCard({
+  review,
+  actions,
+  replyActions,
+  hideReply = false,
+  headingLevel = 3,
+}) {
   const author = review.author
   const name = author?.name || 'Voyageur'
   const profile = getProfileLabel(author?.profile)
   const date = formatReviewDate(review.createdAt)
   const Heading = `h${headingLevel}`
-  const reply = review.providerReply?.text
+  const reply = hideReply ? null : review.providerReply?.text
+  const replyDate = formatReviewDate(review.providerReply?.repliedAt)
 
   return (
     <article className="review-card">
@@ -51,8 +61,14 @@ export default function ReviewCard({ review, actions, headingLevel = 3 }) {
           <p className="legende review-card__reply-title">
             <Icon icon={MessageSquareReply} size={16} />
             Réponse du prestataire
+            {replyDate && (
+              <time className="review-card__reply-date" dateTime={review.providerReply.repliedAt}>
+                · {replyDate}
+              </time>
+            )}
           </p>
-          <p className="texte-s">{reply}</p>
+          <p className="texte-s review-card__reply-text">{reply}</p>
+          {replyActions && <div className="review-card__actions">{replyActions}</div>}
         </div>
       )}
 

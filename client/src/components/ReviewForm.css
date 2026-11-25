@@ -39,3 +39,10 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+/* US6.4 : réponse du prestataire, glissée sous l'avis. */
+.review-form--reply {
+  padding: var(--space-4);
+  background: var(--surface-alt);
+  box-shadow: none;
+}

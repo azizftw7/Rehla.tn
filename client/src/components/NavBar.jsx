@@ -13,7 +13,8 @@ import './NavBar.css'
 const NAV_LINKS = [
   { to: '/destinations', label: 'Destinations' },
   { to: '/services', label: 'Services' },
-  { to: '/partage', label: 'Partage de voyage' },
+  // US5.3 : pour les visiteurs (invités à se connecter) et les voyageurs seulement.
+  { to: '/partage', label: 'Partage de voyage', travelersOnly: true },
 ]
 const BECOME_PROVIDER_LINK = { to: '/inscription?role=prestataire', label: 'Devenir prestataire' }
 
@@ -84,13 +85,15 @@ export default function NavBar() {
           aria-label="Navigation principale"
         >
           <ul role="list" className="navbar__links">
-            {links.map((link) => (
-              <li key={link.to}>
-                <NavLink to={link.to} className="navbar__link" onClick={closeMenu}>
-                  {link.label}
-                </NavLink>
-              </li>
-            ))}
+            {links
+              .filter((link) => !link.travelersOnly || !user || user.role === 'voyageur')
+              .map((link) => (
+                <li key={link.to}>
+                  <NavLink to={link.to} className="navbar__link" onClick={closeMenu}>
+                    {link.label}
+                  </NavLink>
+                </li>
+              ))}
           </ul>
           {user ? (
             <div className="navbar__actions">

@@ -71,6 +71,28 @@ export const users = [
     role: 'voyageur',
     profile: 'touriste',
   },
+  // Sprint 3 : plus de voyageurs pour la pagination des avis (US3.5) et les co-voyageurs (US5.4).
+  {
+    key: 'voyageur4',
+    name: 'Mehdi Jaziri',
+    email: 'voyageur4@demo.rehla.tn',
+    role: 'voyageur',
+    profile: 'etudiant',
+  },
+  {
+    key: 'voyageur5',
+    name: 'Sofia Rossi',
+    email: 'voyageur5@demo.rehla.tn',
+    role: 'voyageur',
+    profile: 'touriste',
+  },
+  {
+    key: 'voyageur6',
+    name: 'Nour Ayari',
+    email: 'voyageur6@demo.rehla.tn',
+    role: 'voyageur',
+    profile: 'resident',
+  },
 ];
 
 // Coordonnées réelles (centre-ville), au format GeoJSON [longitude, latitude].

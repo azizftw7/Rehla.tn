@@ -1,0 +1,387 @@
+/* Page « Partage de voyage » (US5.3, US5.4). Mobile d'abord.
+   Champs, états et pagination : classes de ServicesPage.css ; message de confirmation : MyServicesPage.css. */
+
+.partage-page {
+  padding-block: var(--space-8) var(--space-16);
+}
+
+.partage-page__intro {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.partage-page__head {
+  margin-bottom: 0;
+}
+
+.partage-page__grid {
+  display: grid;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+/* ---------- Formulaire ---------- */
+
+.partage-form {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.partage-form__title {
+  margin: 0;
+}
+
+.partage-form__dates {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.partage-form__optional {
+  color: var(--encre-2);
+  font-weight: 400;
+}
+
+.partage-form__textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.partage-form__counter {
+  margin: 0;
+  color: var(--encre-2);
+  text-align: right;
+}
+
+.partage-form__inline-error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.partage-form__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--bleu);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.partage-form__visible {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface-alt);
+}
+
+.partage-form__visible legend {
+  padding-inline: var(--space-2);
+}
+
+.partage-form__visible .services-page__checkbox:has(input:disabled) {
+  color: var(--encre-2);
+  cursor: default;
+}
+
+.partage-form__visible .services-page__input {
+  background: var(--surface);
+}
+
+.partage-form__sub {
+  margin: 0 0 var(--space-2) var(--space-6);
+}
+
+.partage-form__languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0;
+  border: 0;
+}
+
+.partage-form__language {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Langues : cases à cocher présentées en puces (la case reste focalisable au clavier). */
+.partage-form__language input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.partage-form__language span {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--encre-2);
+  font-size: 14px;
+  transition:
+    background var(--duree-rapide) var(--ease-standard),
+    color var(--duree-rapide) var(--ease-standard);
+}
+
+.partage-form__language input:checked + span {
+  border-color: var(--lagune);
+  background: var(--lagune-pale);
+  color: var(--lagune);
+  font-weight: 600;
+}
+
+.partage-form__language input:focus-visible + span {
+  box-shadow: var(--focus-ring);
+}
+
+.partage-form__languages .services-page__field-error {
+  flex-basis: 100%;
+}
+
+.partage-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---------- Aperçu ---------- */
+
+.partage-apercu {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.partage-apercu__title {
+  margin: 0;
+  color: var(--bougainvillier);
+  text-transform: uppercase;
+}
+
+.partage-apercu__info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--info) 30%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--bleu-pale);
+  color: var(--encre);
+}
+
+.partage-apercu__info svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--info);
+}
+
+/* ---------- Sections co-voyageurs et « Mes partages » ---------- */
+
+.partage-section {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-16);
+}
+
+.partage-section h2:focus {
+  outline: none;
+}
+
+.partage-section h2:focus-visible {
+  border-radius: var(--radius-xs);
+  box-shadow: var(--focus-ring);
+}
+
+.partage-section__head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.partage-section__head p {
+  margin: 0;
+}
+
+.partage-section__select {
+  max-width: 420px;
+}
+
+.partage-section__locked svg {
+  color: var(--bougainvillier);
+}
+
+.partage-section__locked p {
+  margin: 0;
+}
+
+.partage-section__empty {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+.partage-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.partage-filtres__groupe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.partage-chip {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--encre-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background var(--duree-rapide) var(--ease-standard),
+    color var(--duree-rapide) var(--ease-standard),
+    border-color var(--duree-rapide) var(--ease-standard);
+}
+
+.partage-chip:hover {
+  border-color: var(--trait-fort);
+  color: var(--encre);
+}
+
+.partage-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.partage-chip[aria-pressed='true'] {
+  border-color: var(--bougainvillier);
+  background: var(--bougainvillier);
+  color: var(--on-bougainvillier);
+}
+
+.partage-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partage-lignes {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partage-ligne {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  min-height: 72px;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.partage-ligne p {
+  margin: 0;
+}
+
+.partage-ligne__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--bougainvillier-pale);
+  color: var(--bougainvillier);
+}
+
+.partage-ligne__texte {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.partage-ligne__meta {
+  color: var(--encre-2);
+}
+
+.partage-ligne__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--succes-pale);
+  color: var(--succes);
+  font-weight: 600;
+}
+
+.partage-ligne__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Badge et boutons sous le texte sur mobile. */
+.partage-ligne__badge,
+.partage-ligne__actions {
+  grid-column: 2;
+}
+
+/* Tablette (768px = --bp-md) : dates côte à côte, une ligne par partage. */
+@media (min-width: 768px) {
+  .partage-form__dates {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .partage-ligne {
+    grid-template-columns: auto 1fr auto auto;
+  }
+
+  .partage-ligne__badge,
+  .partage-ligne__actions {
+    grid-column: auto;
+  }
+}
+
+/* Ordinateur (1024px = --bp-lg) : formulaire et aperçu en deux colonnes. */
+@media (min-width: 1024px) {
+  .partage-page__grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+
+  .partage-apercu {
+    position: sticky;
+    top: calc(var(--space-24) + var(--space-4));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partage-chip,
+  .partage-form__language span {
+    transition: none;
+  }
+}

@@ -3,7 +3,7 @@ import { CATEGORIES } from '../data/categories.js'
 
 // Filtres de la carte d'une destination (US2.3), synchronisés avec l'URL :
 // ?types=hebergement,restaurant&maxPrice=100&minRating=4&accommodationType=dar
-//   &activityCategory=Plage&from=2026-12-01&to=2026-12-31
+//   &activityCategory=Plage&from=2026-12-01&to=2026-12-31&language=Espagnol (US4.2)
 // L'onglet Transports reste à part : ?types=transport&mode=bus (l'ancien ?type= est encore lu).
 
 /** Types de service affichables sur la carte (dans l'ordre des catégories). */
@@ -38,6 +38,7 @@ const TYPE_OF_FILTER = {
   activityCategory: 'activite',
   from: 'evenement',
   to: 'evenement',
+  language: 'guide',
 }
 
 export const EMPTY_FILTERS = {
@@ -49,6 +50,7 @@ export const EMPTY_FILTERS = {
   activityCategory: '',
   from: '',
   to: '',
+  language: '',
 }
 
 function validDate(value) {
@@ -92,6 +94,7 @@ export function parseMapFilters(searchParams) {
     activityCategory: (searchParams.get('activityCategory') || '').trim().slice(0, 60),
     from: validDate(searchParams.get('from')),
     to: validDate(searchParams.get('to')),
+    language: (searchParams.get('language') || '').trim().slice(0, 40),
   }
   return transport ? { ...EMPTY_FILTERS, transport: true } : filters
 }
@@ -128,9 +131,11 @@ export function toSearchParams(filters, extra = {}) {
     if (filters.types.length > 0) params.types = filters.types.join(',')
     if (filters.price === FREE_PRICE) params.free = 'true'
     else if (filters.price) params.maxPrice = filters.price
-    ;['minRating', 'accommodationType', 'activityCategory', 'from', 'to'].forEach((key) => {
-      if (filters[key]) params[key] = filters[key]
-    })
+    ;['minRating', 'accommodationType', 'activityCategory', 'from', 'to', 'language'].forEach(
+      (key) => {
+        if (filters[key]) params[key] = filters[key]
+      },
+    )
   }
   Object.entries(extra).forEach(([key, value]) => {
     if (value) params[key] = value
@@ -150,7 +155,7 @@ export function toApiParams(filters) {
 
 /** Nombre de filtres actifs en plus des types (pour le bouton « Filtres »). */
 export function countActiveFilters(filters) {
-  const simple = ['price', 'minRating', 'accommodationType', 'activityCategory'].filter(
+  const simple = ['price', 'minRating', 'accommodationType', 'activityCategory', 'language'].filter(
     (key) => filters[key],
   ).length
   // La période compte pour un seul filtre.

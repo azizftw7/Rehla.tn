@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ACCOMMODATION_TYPES, SERVICE_TYPES } from '../models/Service.js';
 import { paginationQuery } from '../utils/pagination.js';
+import { normalizeText } from '../utils/text.js';
 import { isoDate, OBJECT_ID_REGEX } from './services.validators.js';
 
 // Le formulaire est envoyé en multipart/form-data : tous les champs arrivent en texte
@@ -49,13 +50,20 @@ const coordinate = (label, min, max) =>
   );
 
 // Langues : champ répété (languages=fr&languages=ar) ou liste séparée par des virgules.
+// Une langue répétée (« français, Français ») n'est gardée qu'une fois (US4.2).
 const languages = z.preprocess(
   (value) => {
     if (value == null) return undefined;
+    const seen = new Set();
     const list = (Array.isArray(value) ? value : [value])
       .flatMap((item) => String(item).split(','))
       .map((item) => item.trim())
-      .filter(Boolean);
+      .filter((item) => {
+        const key = normalizeText(item);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     return list.length > 0 ? list : undefined;
   },
   z.array(text('Une langue', 40)).max(10, 'Indiquez au plus 10 langues.').optional(),

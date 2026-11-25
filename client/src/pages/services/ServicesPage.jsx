@@ -7,7 +7,8 @@ import ServiceCard, { ServiceCardSkeleton } from '../../components/ServiceCard.j
 import { ACCOMMODATION_TYPES } from '../../data/accommodationTypes.js'
 import { CATEGORIES } from '../../data/categories.js'
 import { EVENT_TYPES } from '../../data/eventTypes.js'
-import { fetchDestinationsList, fetchServices } from '../../lib/servicesApi.js'
+import { formatLanguage } from '../../data/languages.js'
+import { fetchDestinationsList, fetchGuideLanguages, fetchServices } from '../../lib/servicesApi.js'
 import './ServicesPage.css'
 
 const SERVICE_CATEGORIES = CATEGORIES.filter((cat) => cat.type !== 'transport')
@@ -35,10 +36,13 @@ export default function ServicesPage() {
   const to = searchParams.get('to') || ''
   const maxPrice = searchParams.get('maxPrice') || ''
   const freeOnly = searchParams.get('free') === 'true'
+  // US4.2 : langue parlée par le guide.
+  const language = searchParams.get('language') || ''
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [searchInput, setSearchInput] = useState(search)
   const [destinations, setDestinations] = useState([])
+  const [guideLanguages, setGuideLanguages] = useState([])
   const [reload, setReload] = useState(0)
   const [requestState, setRequestState] = useState({
     fetchedKey: null,
@@ -52,6 +56,8 @@ export default function ServicesPage() {
   const effectiveMaxPrice = !freeOnly ? maxPrice : ''
   const effectiveFree = freeOnly ? 'true' : ''
   const isEvent = type === 'evenement'
+  const isGuide = type === 'guide'
+  const effectiveLanguage = isGuide ? language : ''
   const effectiveEventType = isEvent ? eventType : ''
   const effectiveFrom = isEvent ? from : ''
   // Une période inversée n'est pas envoyée à l'API : un message s'affiche sous le champ « Au ».
@@ -69,6 +75,7 @@ export default function ServicesPage() {
     eventType: effectiveEventType,
     from: effectiveFrom,
     to: effectiveTo,
+    language: effectiveLanguage,
     page,
     reload,
   })
@@ -82,6 +89,18 @@ export default function ServicesPage() {
       })
     return () => controller.abort()
   }, [])
+
+  // Langues proposées dans le filtre des guides (chargées seulement sur l'onglet Guides).
+  useEffect(() => {
+    if (!isGuide) return undefined
+    const controller = new AbortController()
+    fetchGuideLanguages({ signal: controller.signal })
+      .then((res) => setGuideLanguages(res.languages || []))
+      .catch(() => {
+        // Liste facultative : le filtre garde au moins la langue de l'URL.
+      })
+    return () => controller.abort()
+  }, [isGuide])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -99,6 +118,7 @@ export default function ServicesPage() {
         eventType: effectiveEventType,
         from: effectiveFrom,
         to: effectiveTo,
+        language: effectiveLanguage,
         page,
         limit: PAGE_LIMIT,
       },
@@ -130,6 +150,7 @@ export default function ServicesPage() {
     effectiveEventType,
     effectiveFrom,
     effectiveTo,
+    effectiveLanguage,
     page,
   ])
 
@@ -172,7 +193,8 @@ export default function ServicesPage() {
       effectiveFrom ||
       (isEvent && to) ||
       maxPrice ||
-      freeOnly,
+      freeOnly ||
+      effectiveLanguage,
   )
 
   return (
@@ -203,6 +225,7 @@ export default function ServicesPage() {
                 eventType: '',
                 from: '',
                 to: '',
+                language: '',
               })}
           >
             Tous
@@ -224,6 +247,7 @@ export default function ServicesPage() {
                   eventType: category.type === 'evenement' ? eventType : '',
                   from: category.type === 'evenement' ? from : '',
                   to: category.type === 'evenement' ? to : '',
+                  language: category.type === 'guide' ? language : '',
                 })
               }
             >
@@ -361,6 +385,28 @@ export default function ServicesPage() {
                 )}
               </div>
             </>
+          )}
+
+          {isGuide && (
+            <div className="services-page__field">
+              <label htmlFor="filtre-langue" className="legende">
+                Langue parlée
+              </label>
+              <select
+                id="filtre-langue"
+                className="services-page__input texte-s"
+                value={language ? formatLanguage(language) : ''}
+                onChange={(e) => updateParams({ language: e.target.value })}
+              >
+                <option value="">Toutes les langues</option>
+                {[...new Set([...guideLanguages, ...(language ? [formatLanguage(language)] : [])])]
+                  .map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+              </select>
+            </div>
           )}
 
           {type === 'activite' && (

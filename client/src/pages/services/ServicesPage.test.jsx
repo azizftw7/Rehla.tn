@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { jsonResponse } from '../../test/utils.jsx'
+import { jsonResponse, mockApi } from '../../test/utils.jsx'
 import ServicesPage from './ServicesPage.jsx'
 
 const DESTINATIONS = [
@@ -324,5 +324,71 @@ describe('ServicesPage — hébergements (US3.1)', () => {
     await screen.findAllByRole('article')
 
     expect(fetchMock.mock.calls.at(-1)[0]).not.toContain('accommodationType')
+  })
+})
+
+describe('ServicesPage — guides (US4.2)', () => {
+  const GUIDES = [
+    {
+      _id: 'g1',
+      type: 'guide',
+      name: 'Slim, guide de l’île',
+      destination: { name: 'Djerba', slug: 'djerba' },
+      price: { amount: 80, unit: 'demi-journée' },
+      languages: ['français', 'arabe', 'anglais', 'italien'],
+      photos: [],
+    },
+  ]
+
+  function mockGuidesApi() {
+    return mockApi({
+      'GET /destinations': () => jsonResponse({ items: DESTINATIONS, total: 2, page: 1, pages: 1 }),
+      'GET /services/languages': () => jsonResponse({ languages: ['Allemand', 'Anglais', 'Arabe'] }),
+      'GET /services': () => jsonResponse({ items: GUIDES, total: 1, page: 1, pages: 1 }),
+    })
+  }
+
+  const lastServicesQuery = (fetchMock) =>
+    new URL(
+      fetchMock.mock.calls.filter(([url]) => new URL(url).pathname === '/api/services').at(-1)[0],
+    ).searchParams
+
+  it('affiche les langues du guide sur la carte', async () => {
+    mockGuidesApi()
+    renderServicesPage('/services?type=guide')
+    const [card] = await screen.findAllByRole('article')
+    expect(within(card).getByText('Français, Arabe, Anglais +1')).toHaveClass('service-card__tag')
+  })
+
+  it('filtre par langue parlée, synchronisée avec l’URL', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockGuidesApi()
+    renderServicesPage('/services?type=guide&language=arabe')
+    await screen.findAllByRole('article')
+
+    const select = screen.getByLabelText('Langue parlée')
+    await within(select).findByRole('option', { name: 'Allemand' })
+    expect(select).toHaveValue('Arabe')
+    expect(lastServicesQuery(fetchMock).get('language')).toBe('arabe')
+
+    await user.selectOptions(select, 'Allemand')
+    expect(lastServicesQuery(fetchMock).get('language')).toBe('Allemand')
+    expect(screen.getByRole('button', { name: /Réinitialiser les filtres/ })).toBeInTheDocument()
+  })
+
+  it('n’affiche le filtre « Langue parlée » que sur l’onglet Guides et l’ignore ailleurs', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockGuidesApi()
+    renderServicesPage('/services?type=restaurant&language=arabe')
+    await screen.findAllByRole('article')
+
+    expect(screen.queryByLabelText('Langue parlée')).not.toBeInTheDocument()
+    expect(lastServicesQuery(fetchMock).get('language')).toBeNull()
+    expect(
+      fetchMock.mock.calls.some(([url]) => url.includes('/services/languages')),
+    ).toBe(false)
+
+    await user.click(screen.getByRole('button', { name: /Guides/ }))
+    expect(await screen.findByLabelText('Langue parlée')).toBeInTheDocument()
   })
 })

@@ -403,6 +403,23 @@ describe('DestinationPage', () => {
       expect(await screen.findByText('1 adresse · 2 filtres')).toBeInTheDocument()
     })
 
+    it('filtre les guides par langue (US4.2)', async () => {
+      const user = userEvent.setup()
+      const fetchMock = mockApi({ services: [page([]), page([])] })
+      renderPage('/destinations/sidi-bou-said?types=guide&language=espagnol')
+
+      expect(await screen.findByText(/1 filtre/)).toBeInTheDocument()
+      expect(lastServicesUrl(fetchMock)).toContain('types=guide&language=espagnol')
+      const select = screen.getByLabelText('Langue du guide')
+      expect(select).toHaveValue('Espagnol')
+      // Filtre propre aux guides : les filtres des hébergements ne s'affichent pas.
+      expect(screen.queryByLabelText('Type d’hébergement')).not.toBeInTheDocument()
+
+      await user.selectOptions(select, 'Allemand')
+      expect(lastServicesUrl(fetchMock)).toContain('language=Allemand')
+      expect(screen.getByTestId('location')).toHaveTextContent('language=Allemand')
+    })
+
     it('n’envoie pas une période incohérente et l’explique', async () => {
       const fetchMock = mockApi({ services: [page([])] })
       renderPage('/destinations/sidi-bou-said?types=evenement&from=2026-12-10&to=2026-12-01')

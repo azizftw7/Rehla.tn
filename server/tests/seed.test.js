@@ -40,6 +40,14 @@ describe('npm run seed', () => {
       expect.arrayContaining(['hebergement', 'restaurant', 'activite', 'evenement', 'guide']),
     );
     expect(await count('offers')).toBeGreaterThan(0);
+    // US4.2 : 5 guides, et au moins un parle espagnol ou allemand.
+    expect(await db.collection('services').countDocuments({ type: 'guide' })).toBe(5);
+    expect(
+      await db.collection('services').countDocuments({ type: 'guide', languages: 'espagnol' }),
+    ).toBe(1);
+    expect(
+      await db.collection('services').countDocuments({ type: 'guide', languages: 'allemand' }),
+    ).toBe(2);
     expect(await count('reviews')).toBeGreaterThan(0);
     expect(await count('transports')).toBeGreaterThan(0);
     // Date de relevé des données indicatives, et non la date d'exécution du seed.

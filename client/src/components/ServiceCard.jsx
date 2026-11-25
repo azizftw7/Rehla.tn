@@ -2,6 +2,7 @@ import { CalendarDays, EyeOff, MapPin, ShieldAlert, Star, UtensilsCrossed } from
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getAccommodationLabel } from '../data/accommodationTypes.js'
+import { formatLanguageList } from '../data/languages.js'
 import { CATEGORIES } from '../data/categories.js'
 import { formatRating } from '../lib/reviewsApi.js'
 import { formatEventPeriod, formatServicePrice } from '../lib/servicesApi.js'
@@ -34,6 +35,7 @@ export default function ServiceCard({ service, to, children, favorite = true }) 
     ratingAverage,
     ratingCount,
     hidden,
+    languages,
   } = service
 
   const [imageFailed, setImageFailed] = useState(false)
@@ -46,7 +48,9 @@ export default function ServiceCard({ service, to, children, favorite = true }) 
     cuisine ||
     activityCategory ||
     (type === 'evenement' ? event?.eventType : null) ||
-    (type === 'hebergement' ? getAccommodationLabel(accommodationType) : null)
+    (type === 'hebergement' ? getAccommodationLabel(accommodationType) : null) ||
+    // US4.2 : un guide affiche les langues qu'il parle.
+    (type === 'guide' ? formatLanguageList(languages) : null)
   const eventPeriod = type === 'evenement' ? formatEventPeriod(event) : null
   const priceLabel = formatServicePrice(service)
 

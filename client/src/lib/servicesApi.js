@@ -148,3 +148,8 @@ export function setServiceHidden(id, hidden, options = {}) {
 export function deleteService(id, options = {}) {
   return apiDelete(`/provider/services/${encodeURIComponent(id)}`, options)
 }
+
+/** GET /api/services/languages (US4.2) → { languages } : langues parlées par les guides. */
+export function fetchGuideLanguages(options = {}) {
+  return apiGet('/services/languages', options)
+}

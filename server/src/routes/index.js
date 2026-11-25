@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
+import { listGuideLanguages } from '../controllers/services.controller.js';
 import { authorize, protect, requireApprovedProvider } from '../middlewares/auth.js';
 import { authLimiter } from '../middlewares/rateLimit.js';
 import adminRoutes from './admin.routes.js';
@@ -15,6 +16,8 @@ const router = Router();
 router.use('/auth', authLimiter, authRoutes);
 router.use('/users', usersRoutes);
 router.use('/destinations', destinationsRoutes);
+// US4.2 : langues des guides (déclarée ici, avant /services/:id).
+router.get('/services/languages', listGuideLanguages);
 router.use('/services', servicesRoutes);
 router.use('/transports', transportsRoutes);
 // Un prestataire n'accède à son espace qu'après validation par l'administrateur (US7.1).

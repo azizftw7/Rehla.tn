@@ -18,6 +18,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
 import { getAccommodationLabel } from '../../data/accommodationTypes.js'
+import { formatLanguage } from '../../data/languages.js'
 import { CATEGORIES } from '../../data/categories.js'
 import { toLatLng } from '../../lib/destinationsApi.js'
 import {
@@ -389,7 +390,7 @@ export default function ServiceDetailPage() {
                 <h2 className="titre-3">Langues parlées</h2>
                 <p className="service-detail__meta-item texte">
                   <Icon icon={Languages} size={18} />
-                  {service.languages.join(', ')}
+                  {service.languages.map(formatLanguage).join(', ')}
                 </p>
               </div>
             )}

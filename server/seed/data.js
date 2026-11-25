@@ -332,6 +332,30 @@ export const services = [
     price: { amount: 100, unit: 'demi-journée' },
     languages: ['français', 'arabe', 'anglais', 'italien'],
   },
+  // US4.2 : deux guides de plus, pour montrer le filtre par langue (espagnol, allemand…).
+  {
+    key: 'djerba-guide-villages',
+    type: 'guide',
+    name: 'Yasmine, guide des villages de l’île',
+    description:
+      'Erriadh, Guellala et ses potiers, la synagogue de la Ghriba : une journée à pied.',
+    destination: 'djerba',
+    provider: 'prestataire1',
+    location: point(10.8622, 33.8156),
+    price: { amount: 140, unit: 'journée' },
+    languages: ['arabe', 'anglais', 'espagnol'],
+  },
+  {
+    key: 'tozeur-guide-oasis',
+    type: 'guide',
+    name: 'Moncef, guide des oasis de montagne',
+    description: 'Chebika, Tamerza et Midès en 4x4, avec arrêts photo au-dessus des canyons.',
+    destination: 'tozeur',
+    provider: 'prestataire2',
+    location: point(8.1371, 33.9214),
+    price: { amount: 180, unit: 'journée' },
+    languages: ['arabe', 'français', 'allemand', 'italien'],
+  },
 ];
 
 export const offers = [

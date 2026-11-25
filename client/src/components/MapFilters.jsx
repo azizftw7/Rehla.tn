@@ -3,6 +3,7 @@ import { useId, useState } from 'react'
 import { ACCOMMODATION_TYPES } from '../data/accommodationTypes.js'
 import { ACTIVITY_CATEGORIES } from '../data/activityCategories.js'
 import { CATEGORIES } from '../data/categories.js'
+import { formatLanguage, GUIDE_LANGUAGES } from '../data/languages.js'
 import {
   appliesTo,
   countActiveFilters,
@@ -21,7 +22,7 @@ import './MapFilters.css'
  * Filtres multicritères de la carte (US2.3).
  * - Catégories : plusieurs types à la fois ; « Transports » ouvre l'onglet des transports.
  * - « Filtres » : prix, note minimale, type d'hébergement, catégorie d'activité, période des
- *   événements. Les filtres propres à un type n'apparaissent que si ce type est affiché.
+ *   événements, langue parlée par les guides (US4.2). Les filtres propres à un type n'apparaissent que si ce type est affiché.
  * filters : objet de lib/mapFilters.js ; onChange(nextFilters) à chaque modification.
  */
 export default function MapFilters({ filters, onChange }) {
@@ -46,6 +47,13 @@ export default function MapFilters({ filters, onChange }) {
     filters.activityCategory && !ACTIVITY_CATEGORIES.includes(filters.activityCategory)
       ? [...ACTIVITY_CATEGORIES, filters.activityCategory]
       : ACTIVITY_CATEGORIES
+
+  // Une langue venue de l'URL mais absente de la liste reste sélectionnable.
+  const languageValue = filters.language ? formatLanguage(filters.language) : ''
+  const languages =
+    languageValue && !GUIDE_LANGUAGES.includes(languageValue)
+      ? [...GUIDE_LANGUAGES, languageValue]
+      : GUIDE_LANGUAGES
 
   return (
     <div className="map-filters">
@@ -184,6 +192,27 @@ export default function MapFilters({ filters, onChange }) {
                 {activityCategories.map((category) => (
                   <option key={category} value={category}>
                     {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {appliesTo(filters, 'guide') && (
+            <div className="services-page__field">
+              <label htmlFor={`${id}-langue`} className="legende">
+                Langue du guide
+              </label>
+              <select
+                id={`${id}-langue`}
+                className="services-page__input texte-s"
+                value={languageValue}
+                onChange={set('language')}
+              >
+                <option value="">Toutes les langues</option>
+                {languages.map((language) => (
+                  <option key={language} value={language}>
+                    {language}
                   </option>
                 ))}
               </select>

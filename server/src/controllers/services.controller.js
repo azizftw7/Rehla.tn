@@ -1,7 +1,28 @@
 import { Destination, Offer, Service } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { paginate } from '../utils/pagination.js';
-import { escapeRegex } from '../utils/text.js';
+import { escapeRegex, normalizeText } from '../utils/text.js';
+
+// Variantes accentuées des voyelles et du c : « francais » trouve « Français ».
+const ACCENT_CLASSES = {
+  a: '[aàâä]',
+  c: '[cç]',
+  e: '[eéèêë]',
+  i: '[iîï]',
+  o: '[oôö]',
+  u: '[uùûü]',
+};
+
+/** Expression exacte, insensible à la casse et aux accents (ex. une langue). */
+export function accentInsensitiveExact(value) {
+  const pattern = [...normalizeText(value)]
+    .map((char) => ACCENT_CLASSES[char] ?? escapeRegex(char))
+    .join('');
+  return new RegExp(`^${pattern}$`, 'i');
+}
+
+/** « français » → « Français ». */
+const capitalize = (value) => value.charAt(0).toLocaleUpperCase('fr') + value.slice(1);
 
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
 
@@ -36,7 +57,7 @@ function eventCriteria({ eventType, from, to }) {
 
 /**
  * GET /api/services?type=|types=a,b&destination=&search=&cuisine=&activityCategory=
- *   &accommodationType=&eventType=&from=&to=&free=&maxPrice=&minRating=&page=&limit=
+ *   &accommodationType=&eventType=&from=&to=&free=&maxPrice=&minRating=&language=&page=&limit=
  */
 export async function listServices(req, res) {
   const {
@@ -53,6 +74,7 @@ export async function listServices(req, res) {
     free,
     maxPrice,
     minRating,
+    language,
     page,
     limit,
   } = req.validated.query;
@@ -107,6 +129,11 @@ export async function listServices(req, res) {
     conditions.push(onlyForType('hebergement', { accommodationType }));
   }
 
+  // US4.2 : la langue ne restreint que les guides ; « anglais » trouve « Anglais ».
+  if (language) {
+    conditions.push(onlyForType('guide', { languages: accentInsensitiveExact(language) }));
+  }
+
   if (eventType || from || to) {
     conditions.push(onlyForType('evenement', eventCriteria({ eventType, from, to })));
   }
@@ -137,6 +164,21 @@ export async function listServices(req, res) {
   });
 
   res.json(result);
+}
+
+/**
+ * GET /api/services/languages (public, US4.2) : langues parlées par les guides visibles,
+ * sans doublon (« français » et « Français » ne comptent qu'une fois), triées. → { languages }
+ */
+export async function listGuideLanguages(_req, res) {
+  const values = await Service.distinct('languages', { type: 'guide', hidden: false });
+  const byKey = new Map();
+  for (const value of values) {
+    const key = normalizeText(value);
+    if (key && !byKey.has(key)) byKey.set(key, capitalize(value.trim()));
+  }
+  const languages = [...byKey.values()].sort((a, b) => a.localeCompare(b, 'fr'));
+  res.json({ languages });
 }
 
 export async function getService(req, res) {

@@ -43,6 +43,7 @@ describe('parseMapFilters', () => {
       activityCategory: 'Plage',
       from: '2026-12-01',
       to: '2026-12-31',
+      language: '',
     })
     expect(parse('free=true&maxPrice=100').price).toBe('gratuit')
   })
@@ -112,5 +113,22 @@ describe('countActiveFilters', () => {
         to: '2026-12-31',
       }),
     ).toBe(3)
+  })
+})
+
+describe('mapFilters — langue des guides (US4.2)', () => {
+  it('lit, écrit et compte la langue', () => {
+    const filters = parse('types=guide&language=Espagnol')
+    expect(filters.language).toBe('Espagnol')
+    expect(toSearchParams(filters)).toEqual({ types: 'guide', language: 'Espagnol' })
+    expect(toApiParams(filters)).toEqual({ types: 'guide', language: 'Espagnol' })
+    expect(countActiveFilters(filters)).toBe(1)
+  })
+
+  it('efface la langue quand les guides ne sont plus affichés', () => {
+    const filters = parse('types=guide&language=Espagnol')
+    expect(withTypes(filters, ['restaurant']).language).toBe('')
+    expect(withTypes(filters, ['guide', 'restaurant']).language).toBe('Espagnol')
+    expect(EMPTY_FILTERS.language).toBe('')
   })
 })

@@ -92,6 +92,13 @@ const listServicesObject = z.object({
     .optional(),
   from: isoDate('La date de début', false).optional(),
   to: isoDate('La date de fin', true).optional(),
+  // US4.2 : langue parlée par un guide (insensible à la casse et aux accents).
+  language: z
+    .string({ error: 'La langue doit être un texte.' })
+    .trim()
+    .min(1, 'La langue ne peut pas être vide.')
+    .max(40, 'La langue ne peut pas dépasser 40 caractères.')
+    .optional(),
   maxPrice: z.coerce
     .number({ error: 'Le prix maximum doit être un nombre.' })
     .min(0, 'Le prix maximum ne peut pas être négatif.')

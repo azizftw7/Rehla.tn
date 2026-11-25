@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import Icon from '../../components/Icon.jsx'
 import { CATEGORIES } from '../../data/categories.js'
+import { TRAVELER_PROFILES } from '../../data/travelerProfiles.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { isApprovedProvider } from '../../lib/providerApproval.js'
 import AuthLayout, { AuthField, FormAlert } from './AuthLayout.jsx'
@@ -15,11 +16,7 @@ const ROLES = [
   { value: 'prestataire', label: 'Prestataire', icon: Store },
 ]
 
-const PROFILES = [
-  { value: 'etudiant', label: 'Étudiant' },
-  { value: 'resident', label: 'Résident' },
-  { value: 'touriste', label: 'Touriste' },
-]
+const PROFILES = TRAVELER_PROFILES
 
 // Types d'activité acceptés par le serveur (types de service, sans les transports).
 const ACTIVITY_TYPES = CATEGORIES.filter((cat) => cat.type !== 'transport')

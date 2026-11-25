@@ -259,7 +259,9 @@ describe('ServiceDetailPage — hébergement (US3.1)', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Menzel des Palmes Bleues' }),
     ).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    // Deux chargements de la fiche (les avis ont leur propre requête, /reviews).
+    const detailCalls = fetchMock.mock.calls.filter(([url]) => url.endsWith('/services/h1'))
+    expect(detailCalls).toHaveLength(2)
   })
 })
 

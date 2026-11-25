@@ -1,0 +1,126 @@
+/* Avis des voyageurs sur la fiche service (US3.5). */
+.service-reviews {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.service-reviews > h2 {
+  margin: 0;
+}
+
+/* Mobile : moyenne au-dessus de la répartition. */
+.service-reviews__summary {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--trait);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+/* Tablette (768px = --bp-md) : moyenne à gauche, barres à droite. */
+@media (min-width: 768px) {
+  .service-reviews__summary {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-8);
+  }
+}
+
+.service-reviews__average {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+}
+
+.service-reviews__average p {
+  margin: 0;
+}
+
+.service-reviews__average-value {
+  color: var(--encre);
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.service-reviews__count {
+  color: var(--encre-2);
+}
+
+.service-reviews__bars {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.service-reviews__bar {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--encre-2);
+}
+
+.service-reviews__track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--surface-alt);
+}
+
+.service-reviews__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--safran);
+}
+
+.service-reviews__notice {
+  margin: 0;
+  color: var(--succes);
+  font-weight: 600;
+}
+
+.service-reviews__live:empty {
+  display: none;
+}
+
+.service-reviews__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 1px dashed var(--trait-fort);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.service-reviews__cta p,
+.service-reviews__hint,
+.service-reviews__empty {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+.service-reviews__mine {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.service-reviews__mine > h3 {
+  margin: 0;
+}
+
+.service-reviews__list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

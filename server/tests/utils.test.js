@@ -2,9 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { Destination } from '../src/models/index.js';
 import { paginate, paginationQuery } from '../src/utils/pagination.js';
-import { escapeRegex, normalizeText, slugify } from '../src/utils/text.js';
+import { escapeRegex, normalizeText, publicName, slugify } from '../src/utils/text.js';
 
 describe('utils/text', () => {
+  it('publicName : prénom et initiale du nom, sans le nom complet', () => {
+    expect(publicName('Amel Ben Salah')).toBe('Amel B.');
+    expect(publicName('  karim   trabelsi ')).toBe('karim T.');
+    expect(publicName('Karim')).toBe('Karim');
+    expect(publicName('')).toBe('');
+  });
+
   it('retire les accents et met en minuscules', () => {
     expect(normalizeText('  Aïn Draham ')).toBe('ain draham');
     expect(normalizeText('Gabès')).toBe('gabes');

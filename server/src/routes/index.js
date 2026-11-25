@@ -6,6 +6,7 @@ import adminRoutes from './admin.routes.js';
 import authRoutes from './auth.routes.js';
 import destinationsRoutes from './destinations.routes.js';
 import providerRoutes from './provider.routes.js';
+import reviewsRoutes from './reviews.routes.js';
 import servicesRoutes from './services.routes.js';
 import transportsRoutes from './transports.routes.js';
 import usersRoutes from './users.routes.js';
@@ -16,6 +17,7 @@ router.use('/auth', authLimiter, authRoutes);
 router.use('/users', usersRoutes);
 router.use('/destinations', destinationsRoutes);
 router.use('/services', servicesRoutes);
+router.use('/reviews', reviewsRoutes);
 router.use('/transports', transportsRoutes);
 // Un prestataire n'accède à son espace qu'après validation par l'administrateur (US7.1).
 router.use('/provider', protect, authorize('prestataire'), requireApprovedProvider, providerRoutes);

@@ -40,6 +40,25 @@ describe('NavBar — utilisateur connecté', () => {
     expect(screen.queryByRole('link', { name: 'Espace prestataire' })).not.toBeInTheDocument()
   })
 
+  it('propose « Mes favoris » aux voyageurs seulement (US5.1)', async () => {
+    renderConnected({ _id: 'u1', name: 'Amel Trabelsi', role: 'voyageur' })
+    expect(await screen.findByRole('link', { name: 'Mes favoris' })).toHaveAttribute(
+      'href',
+      '/mes-favoris',
+    )
+  })
+
+  it('pas de « Mes favoris » pour un prestataire', async () => {
+    renderConnected({
+      _id: 'p1',
+      name: 'Karim Jlassi',
+      role: 'prestataire',
+      provider: { approval: 'approuve' },
+    })
+    await screen.findByRole('link', { name: 'Espace prestataire' })
+    expect(screen.queryByRole('link', { name: 'Mes favoris' })).not.toBeInTheDocument()
+  })
+
   it('propose l’espace prestataire à un prestataire validé', async () => {
     renderConnected({
       _id: 'p1',

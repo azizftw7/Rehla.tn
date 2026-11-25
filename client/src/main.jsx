@@ -6,6 +6,7 @@ import './styles/global.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { FavoritesProvider } from './context/FavoritesContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
       {/* Dernier recours : si la mise en page elle-même plante. */}
       <ErrorBoundary standalone>
         <AuthProvider>
-          <App />
+          <FavoritesProvider>
+            <App />
+          </FavoritesProvider>
         </AuthProvider>
       </ErrorBoundary>
     </BrowserRouter>

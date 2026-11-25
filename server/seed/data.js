@@ -358,6 +358,15 @@ export const offers = [
   },
 ];
 
+// US5.1 : favoris des voyageurs de démo (page « Mes favoris »).
+export const favorites = [
+  { user: 'voyageur1', service: 'djerba-hebergement' },
+  { user: 'voyageur1', service: 'djerba-activite' },
+  { user: 'voyageur1', service: 'tozeur-activite' },
+  { user: 'voyageur1', service: 'sbs-guide' },
+  { user: 'voyageur2', service: 'sbs-restaurant' },
+];
+
 export const reviews = [
   {
     service: 'djerba-hebergement',

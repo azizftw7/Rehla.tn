@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { getAccommodationLabel } from '../data/accommodationTypes.js'
 import { CATEGORIES } from '../data/categories.js'
 import { formatEventPeriod, formatServicePrice } from '../lib/servicesApi.js'
+import FavoriteButton from './FavoriteButton.jsx'
 import Icon from './Icon.jsx'
 import './ServiceCard.css'
 
@@ -13,9 +14,10 @@ const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((cat) => [cat.type, cat])
 - Carte d'un service.
 - - to : cible du lien (par défaut la fiche publique) ;
 - - children : actions affichées en bas de la carte (ex. « Mes services » du prestataire) ;
-- - un service masqué (hidden) porte le badge « Masqué ».
+- - un service masqué (hidden) porte le badge « Masqué » ;
+- - favorite : affiche le bouton cœur (US5.1, voyageurs et visiteurs ; false pour le masquer).
  */
-export default function ServiceCard({ service, to, children }) {
+export default function ServiceCard({ service, to, children, favorite = true }) {
   const {
     _id,
     type,
@@ -73,6 +75,7 @@ export default function ServiceCard({ service, to, children }) {
         <Icon icon={CategoryIcon} size={14} />
         {category?.label || type}
       </span>
+      {favorite && !hidden && <FavoriteButton serviceId={_id} serviceName={name} />}
       {hidden && (
         <span className="service-card__badge service-card__badge--hidden legende">
           <Icon icon={EyeOff} size={14} />

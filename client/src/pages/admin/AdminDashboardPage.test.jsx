@@ -9,6 +9,9 @@ const STATS = {
   users: { voyageur: 12, prestataire: 4, admin: 1, total: 17 },
   suspended: 2,
   pendingProviders: 3,
+  reviews: 14,
+  tripShares: 6,
+  services: { total: 20, hidden: 2 },
 }
 
 function renderDashboard() {
@@ -37,6 +40,24 @@ describe('AdminDashboardPage', () => {
     await user.click(screen.getByRole('link', { name: 'Demandes en attente : 3' }))
     expect(screen.getByTestId('location')).toHaveTextContent(
       '/admin/utilisateurs?approval=en_attente',
+    )
+  })
+
+  it('affiche les compteurs de contenus (US7.2) qui mènent à la modération', async () => {
+    const user = userEvent.setup()
+    mockApi({ 'GET /admin/stats': () => jsonResponse(STATS) })
+    renderDashboard()
+
+    expect(await screen.findByRole('link', { name: 'Avis publiés : 14' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Partages de voyage : 6' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Modération' })).toHaveAttribute(
+      'href',
+      '/admin/moderation',
+    )
+
+    await user.click(screen.getByRole('link', { name: 'Services masqués : 2' }))
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/admin/moderation?onglet=services&visibilite=masques',
     )
   })
 

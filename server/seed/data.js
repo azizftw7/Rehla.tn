@@ -451,6 +451,13 @@ export const reviews = [
     comment: 'Le meilleur couscous au poisson de l’île.',
   },
   { service: 'tozeur-activite', author: 'voyageur4', rating: 4, comment: 'Guide très patient.' },
+  // US7.2 : avis publicitaire à supprimer par l'administrateur pendant la démo.
+  {
+    service: 'sbs-hebergement',
+    author: 'voyageur6',
+    rating: 1,
+    comment: 'PROMO !!! Réservez moins cher ailleurs, écrivez-moi en privé pour le lien.',
+  },
 ];
 
 // Horaires et tarifs indicatifs pour la démo : ils ne proviennent pas des opérateurs.

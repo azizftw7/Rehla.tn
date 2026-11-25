@@ -546,3 +546,35 @@
     transition: none;
   }
 }
+
+/* ---------- Tableau de bord : deux boutons ; modération (US7.2) ---------- */
+
+.admin-page__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-moderation__comment {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.admin-moderation__who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Recherche + visibilité + bouton : trois colonnes à partir de 768px (= --bp-md). */
+@media (min-width: 768px) {
+  .admin-moderation__filters {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+}

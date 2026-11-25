@@ -59,6 +59,8 @@ describe('npm run seed', () => {
       .countDocuments({ 'providerReply.text': { $type: 'string' } });
     expect(replied).toBe(3);
     expect(await count('reviews')).toBeGreaterThan(replied);
+    // US7.2 : un avis publicitaire à modérer pendant la démo.
+    expect(await db.collection('reviews').countDocuments({ comment: /^PROMO/ })).toBe(1);
 
     // US3.1 : chaque hébergement a un type, et au moins une offre en cours sur un hébergement.
     const lodgings = await db.collection('services').find({ type: 'hebergement' }).toArray();

@@ -8,7 +8,10 @@ export const ROLE_LABELS = {
   admin: 'Administrateur',
 }
 
-/** { users: { voyageur, prestataire, admin, total }, suspended, pendingProviders } */
+/**
+ * { users: { voyageur, prestataire, admin, total }, suspended, pendingProviders,
+ *   reviews, tripShares, services: { total, hidden } } (compteurs de contenus : US7.2)
+ */
 export function fetchAdminStats(options) {
   return apiGet('/admin/stats', options)
 }
@@ -46,4 +49,50 @@ export function notifyAdminChange() {
 export function onAdminChange(handler) {
   window.addEventListener(ADMIN_CHANGE_EVENT, handler)
   return () => window.removeEventListener(ADMIN_CHANGE_EVENT, handler)
+}
+
+// ---------- US7.2 : modération des contenus ----------
+
+const withQuery = (path, params = {}) => {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.set(key, String(value))
+  })
+  const qs = query.toString()
+  return `${path}${qs ? `?${qs}` : ''}`
+}
+
+/** GET /api/admin/reviews?search&page&limit → { items, total, page, pages } */
+export function fetchAdminReviews(params, options) {
+  return apiGet(withQuery('/admin/reviews', params), options)
+}
+
+/** DELETE /api/admin/reviews/:id (204) : la note du service est recalculée. */
+export function deleteAdminReview(id) {
+  return apiDelete(`/admin/reviews/${id}`)
+}
+
+/** GET /api/admin/services?search&type&hidden&page&limit → { items, total, page, pages } */
+export function fetchAdminServices(params, options) {
+  return apiGet(withQuery('/admin/services', params), options)
+}
+
+/** PATCH /api/admin/services/:id/visibilite { hidden } → { service } */
+export function setAdminServiceHidden(id, hidden) {
+  return apiPatch(`/admin/services/${id}/visibilite`, { hidden })
+}
+
+/** DELETE /api/admin/services/:id (204) : avec ses photos, offres, avis et favoris. */
+export function deleteAdminService(id) {
+  return apiDelete(`/admin/services/${id}`)
+}
+
+/** GET /api/admin/trip-shares?search&page&limit → { items, total, page, pages } */
+export function fetchAdminTripShares(params, options) {
+  return apiGet(withQuery('/admin/trip-shares', params), options)
+}
+
+/** DELETE /api/admin/trip-shares/:id (204). */
+export function deleteAdminTripShare(id) {
+  return apiDelete(`/admin/trip-shares/${id}`)
 }

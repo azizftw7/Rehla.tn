@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PROVIDER_APPROVALS, ROLES, USER_STATUSES } from '../models/index.js';
+import { PROVIDER_APPROVALS, ROLES, SERVICE_TYPES, USER_STATUSES } from '../models/index.js';
 import { paginationQuery } from '../utils/pagination.js';
 import { OBJECT_ID_REGEX } from './services.validators.js';
 
@@ -57,4 +57,38 @@ export const validationSchema = z.object({
       .max(300, 'Le motif ne peut pas dépasser 300 caractères.')
       .optional(),
   ),
+});
+
+// ---------- US7.2 : modération des contenus ----------
+
+const objectId = (message) => z.object({ id: z.string().trim().regex(OBJECT_ID_REGEX, message) });
+
+export const reviewIdSchema = objectId("Identifiant d'avis invalide.");
+export const serviceIdSchema = objectId('Identifiant de service invalide.');
+export const tripShareIdSchema = objectId('Identifiant de partage invalide.');
+
+const search = z.preprocess(
+  emptyToUndefined,
+  z
+    .string({ error: 'La recherche doit être un texte.' })
+    .trim()
+    .max(100, 'La recherche ne peut pas dépasser 100 caractères.')
+    .optional(),
+);
+
+// GET /api/admin/reviews et /api/admin/trip-shares : recherche facultative.
+export const moderationQuerySchema = z.object({ search, ...paginationQuery });
+
+// GET /api/admin/services : recherche, type et visibilité facultatifs.
+export const adminServicesQuerySchema = z.object({
+  search,
+  type: optionalEnum(SERVICE_TYPES, 'Type de service invalide.'),
+  hidden: z.preprocess(
+    emptyToUndefined,
+    z
+      .enum(['true', 'false'], { error: 'Le filtre « masqué » doit être vrai ou faux.' })
+      .transform((value) => value === 'true')
+      .optional(),
+  ),
+  ...paginationQuery,
 });

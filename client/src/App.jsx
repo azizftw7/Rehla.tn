@@ -3,6 +3,7 @@ import Layout from './components/Layout.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RequireApprovedProvider from './components/RequireApprovedProvider.jsx'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
+import AdminModerationPage from './pages/admin/AdminModerationPage.jsx'
 import AdminUsersPage from './pages/admin/AdminUsersPage.jsx'
 import ChangePasswordPage from './pages/account/ChangePasswordPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
@@ -52,6 +53,7 @@ export default function App() {
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="admin" element={<AdminDashboardPage />} />
           <Route path="admin/utilisateurs" element={<AdminUsersPage />} />
+          <Route path="admin/moderation" element={<AdminModerationPage />} />
         </Route>
         {import.meta.env.DEV && <Route path="test-erreur" element={<CrashTestPage />} />}
         <Route path="*" element={<NotFoundPage />} />

@@ -1,4 +1,15 @@
-import { Backpack, ChevronRight, Hourglass, Store, UserRoundX, Users } from 'lucide-react'
+import {
+  Backpack,
+  ChevronRight,
+  EyeOff,
+  Hourglass,
+  Luggage,
+  MessageSquareText,
+  ShieldAlert,
+  Store,
+  UserRoundX,
+  Users,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
@@ -40,6 +51,31 @@ const STAT_CARDS = [
     to: '/admin/utilisateurs?status=suspendu',
     value: (stats) => stats.suspended,
   },
+  // US7.2 : contenus à modérer.
+  {
+    key: 'avis',
+    label: 'Avis publiés',
+    icon: MessageSquareText,
+    tone: 'bleu',
+    to: '/admin/moderation?onglet=avis',
+    value: (stats) => stats.reviews ?? 0,
+  },
+  {
+    key: 'partages',
+    label: 'Partages de voyage',
+    icon: Luggage,
+    tone: 'lagune',
+    to: '/admin/moderation?onglet=partages',
+    value: (stats) => stats.tripShares ?? 0,
+  },
+  {
+    key: 'services-masques',
+    label: 'Services masqués',
+    icon: EyeOff,
+    tone: 'safran',
+    to: '/admin/moderation?onglet=services&visibilite=masques',
+    value: (stats) => stats.services?.hidden ?? 0,
+  },
 ]
 
 /** /admin : tableau de bord de l'administrateur (chiffres clés des comptes). */
@@ -72,12 +108,18 @@ export default function AdminDashboardPage() {
               Tableau de bord
             </h1>
             <p className="texte-l" style={{ color: 'var(--encre-2)' }}>
-              Suivez les comptes de la plateforme et validez les nouveaux prestataires.
+              Suivez les comptes et les contenus de la plateforme, validez les nouveaux
+              prestataires et modérez les avis, les services et les partages.
             </p>
           </div>
-          <Button to="/admin/utilisateurs" variant="primary" icon={Users}>
-            Gérer les utilisateurs
-          </Button>
+          <div className="admin-page__header-actions">
+            <Button to="/admin/utilisateurs" variant="primary" icon={Users}>
+              Gérer les utilisateurs
+            </Button>
+            <Button to="/admin/moderation" variant="secondary" icon={ShieldAlert}>
+              Modération
+            </Button>
+          </div>
         </header>
 
         {error ? (

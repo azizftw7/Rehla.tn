@@ -73,6 +73,10 @@ describe('US7.1 — GET /api/admin/stats', () => {
       users: { voyageur: 2, prestataire: 3, admin: 1, total: 6 },
       suspended: 1,
       pendingProviders: 2,
+      // US7.2 : compteurs de contenus (aucun ici).
+      reviews: 0,
+      tripShares: 0,
+      services: { total: 0, hidden: 0, hiddenByAdmin: 0 },
     });
   });
 });

@@ -1,6 +1,7 @@
 import { Destination, Favorite, Offer, Review, Service } from '../models/index.js';
 import { MAX_PHOTOS } from '../middlewares/upload.js';
 import { ApiError } from '../utils/ApiError.js';
+import { HIDDEN_BY_ADMIN } from '../utils/messages.js';
 import { paginate } from '../utils/pagination.js';
 import { deleteImages, uploadImages } from '../utils/upload.js';
 import { toServiceDocument } from '../validators/provider.validators.js';
@@ -113,9 +114,16 @@ export async function updateService(req, res) {
   res.json({ service });
 }
 
-/** PATCH /api/provider/services/:id/visibilite : masque ou réaffiche le service. */
+/**
+ * PATCH /api/provider/services/:id/visibilite : masque ou réaffiche le service.
+ * Un service masqué par la modération (hiddenByAdmin) ne peut pas être réaffiché par le
+ * prestataire (403) ; il peut seulement le masquer de son côté.
+ */
 export async function setServiceVisibility(req, res) {
   const service = await findOwnService(req);
+  if (service.hiddenByAdmin && req.validated.body.hidden === false) {
+    throw ApiError.forbidden(HIDDEN_BY_ADMIN);
+  }
   service.hidden = req.validated.body.hidden;
   await service.save();
   await service.populate('destination', 'name slug region');

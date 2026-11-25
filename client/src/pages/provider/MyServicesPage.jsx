@@ -204,7 +204,7 @@ export default function MyServicesPage() {
                   <li key={service._id}>
                     <ServiceCard
                       service={service}
-                      to={service.hidden ? editUrl(service) : undefined}
+                      to={service.hidden || service.hiddenByAdmin ? editUrl(service) : undefined}
                     >
                       <Button
                         to={editUrl(service)}
@@ -215,17 +215,24 @@ export default function MyServicesPage() {
                       >
                         Modifier
                       </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        icon={service.hidden ? Eye : EyeOff}
-                        disabled={busy}
-                        aria-label={`${service.hidden ? 'Afficher' : 'Masquer'} « ${service.name} »`}
-                        onClick={() => toggleVisibility(service)}
-                      >
-                        {service.hidden ? 'Afficher' : 'Masquer'}
-                      </Button>
+                      {/* US7.2 : masqué par la modération, seul l'administrateur peut le réafficher. */}
+                      {service.hiddenByAdmin ? (
+                        <p className="legende mes-services__moderation-hint">
+                          Seul l’administrateur peut le réafficher.
+                        </p>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          icon={service.hidden ? Eye : EyeOff}
+                          disabled={busy}
+                          aria-label={`${service.hidden ? 'Afficher' : 'Masquer'} « ${service.name} »`}
+                          onClick={() => toggleVisibility(service)}
+                        >
+                          {service.hidden ? 'Afficher' : 'Masquer'}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="ghost"

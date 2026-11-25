@@ -1,4 +1,4 @@
-import { CalendarDays, EyeOff, MapPin, Star, UtensilsCrossed } from 'lucide-react'
+import { CalendarDays, EyeOff, MapPin, ShieldAlert, Star, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getAccommodationLabel } from '../data/accommodationTypes.js'
@@ -50,7 +50,7 @@ export default function ServiceCard({ service, to, children }) {
 
   return (
     <article
-      className={`service-card${hidden ? ' service-card--hidden' : ''}`}
+      className={`service-card${hidden || service.hiddenByAdmin ? ' service-card--hidden' : ''}`}
       style={{ '--service-accent': accentColor }}
     >
       <div className="service-card__media arche">
@@ -82,6 +82,13 @@ export default function ServiceCard({ service, to, children }) {
       )}
 
       <div className="service-card__body">
+        {/* US7.2 : visible seulement dans l'espace prestataire (un service public n'est jamais masqué). */}
+        {service.hiddenByAdmin && (
+          <p className="service-card__moderation legende">
+            <Icon icon={ShieldAlert} size={14} />
+            Masqué par la modération
+          </p>
+        )}
         <div className="service-card__header">
           <h3 className="titre-4">
             <Link to={to || `/services/${_id}`} className="service-card__link">

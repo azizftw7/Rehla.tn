@@ -64,7 +64,10 @@ const serviceSchema = new Schema(
     },
     languages: { type: [String], default: undefined }, // guide
 
+    // Masqué par son prestataire (US6.2) : il peut le réafficher.
     hidden: { type: Boolean, default: false },
+    // Masqué par l'administrateur (US7.2) : seul l'administrateur peut le réafficher.
+    hiddenByAdmin: { type: Boolean, default: false },
     ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0, min: 0 },
   },
@@ -92,5 +95,23 @@ serviceSchema.pre('validate', function () {
     }
   }
 });
+
+/**
+ * Un service est public seulement si hidden et hiddenByAdmin sont faux.
+ * Les requêtes publiques filtrent sur « hidden: false » : ce hook y ajoute automatiquement
+ * « hiddenByAdmin différent de true », pour qu'aucune d'elles (liste, fiche, avis, favoris,
+ * destinations, langues des guides…) ne montre un service masqué par l'administrateur.
+ * Une requête qui précise déjà hiddenByAdmin (ex. l'administration) n'est pas modifiée.
+ */
+function excludeHiddenByAdmin() {
+  const filter = this.getFilter();
+  if (filter.hidden === false && filter.hiddenByAdmin === undefined) {
+    this.where({ hiddenByAdmin: { $ne: true } });
+  }
+}
+serviceSchema.pre(['find', 'findOne', 'countDocuments', 'distinct'], excludeHiddenByAdmin);
+
+/** Filtre des services non publics (masqués par le prestataire ou par l'administrateur). */
+export const NOT_PUBLIC_FILTER = { $or: [{ hidden: true }, { hiddenByAdmin: true }] };
 
 export const Service = mongoose.model('Service', serviceSchema);

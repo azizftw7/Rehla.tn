@@ -122,7 +122,7 @@ describe('US7.2 — GET /api/admin/stats', () => {
     expect(res.body).toMatchObject({
       reviews: 2,
       tripShares: 1,
-      services: { total: 2, hidden: 1 },
+      services: { total: 2, hidden: 1, hiddenByAdmin: 0 },
     });
   });
 });
@@ -213,11 +213,16 @@ describe('US7.2 — services', () => {
   it('masque puis réaffiche un service', async () => {
     const hide = await patch(`/api/admin/services/${dar._id}/visibilite`, { hidden: true });
     expect(hide.status).toBe(200);
-    expect(hide.body.service).toMatchObject({ hidden: true, name: 'Dar Yasmine' });
+    // La modération utilise son propre champ : le choix du prestataire (hidden) ne change pas.
+    expect(hide.body.service).toMatchObject({
+      hidden: false,
+      hiddenByAdmin: true,
+      name: 'Dar Yasmine',
+    });
     expect((await request(app).get(`/api/services/${dar._id}`)).status).toBe(404);
 
     const show = await patch(`/api/admin/services/${dar._id}/visibilite`, { hidden: false });
-    expect(show.body.service.hidden).toBe(false);
+    expect(show.body.service.hiddenByAdmin).toBe(false);
     expect((await request(app).get(`/api/services/${dar._id}`)).status).toBe(200);
   });
 
@@ -250,6 +255,80 @@ describe('US7.2 — services', () => {
     expect(destroy).toHaveBeenCalledWith('rehla/services/dar', { resource_type: 'image' });
 
     expect((await del(`/api/admin/services/${dar._id}`)).status).toBe(404);
+  });
+});
+
+describe('US7.2 — service masqué par la modération (hiddenByAdmin)', () => {
+  const providerPatch = (service, hidden) =>
+    request(app)
+      .patch(`/api/provider/services/${service._id}/visibilite`)
+      .set(authHeader(provider))
+      .send({ hidden });
+
+  beforeEach(async () => {
+    await patch(`/api/admin/services/${dar._id}/visibilite`, { hidden: true });
+  });
+
+  it('le prestataire ne peut pas le réafficher (403), mais peut le masquer de son côté', async () => {
+    const show = await providerPatch(dar, false);
+    expect(show.status).toBe(403);
+    expect(show.body.message).toBe(
+      "Ce service a été masqué par la modération : seul l'administrateur peut le réafficher.",
+    );
+    expect(await Service.findById(dar._id)).toMatchObject({ hidden: false, hiddenByAdmin: true });
+
+    const hide = await providerPatch(dar, true);
+    expect(hide.status).toBe(200);
+    expect(hide.body.service).toMatchObject({ hidden: true, hiddenByAdmin: true });
+  });
+
+  it('le prestataire voit le service dans « Mes services » avec hiddenByAdmin', async () => {
+    const res = await request(app).get('/api/provider/services').set(authHeader(provider));
+    expect(res.body.items.find((s) => s.name === 'Dar Yasmine')).toMatchObject({
+      hidden: false,
+      hiddenByAdmin: true,
+    });
+  });
+
+  it('n’est public que si hidden et hiddenByAdmin sont faux', async () => {
+    const isPublic = async () =>
+      (await request(app).get(`/api/services/${dar._id}`)).status === 200;
+    const listed = async () =>
+      (await request(app).get('/api/services')).body.items.some((s) => s.name === 'Dar Yasmine');
+
+    expect(await isPublic()).toBe(false);
+    expect(await listed()).toBe(false);
+    // Les avis d'un service non public ne sont plus consultables.
+    expect((await request(app).get(`/api/services/${dar._id}/reviews`)).status).toBe(404);
+
+    // Le prestataire l'avait aussi masqué : la levée de la modération ne le rend pas public.
+    await providerPatch(dar, true);
+    await patch(`/api/admin/services/${dar._id}/visibilite`, { hidden: false });
+    expect(await isPublic()).toBe(false);
+
+    await providerPatch(dar, false);
+    expect(await isPublic()).toBe(true);
+    expect(await listed()).toBe(true);
+  });
+
+  it('les requêtes « hidden: false » des autres modules l’excluent aussi (hook du modèle)', async () => {
+    // Mêmes formes de requêtes que les favoris, les destinations et les langues des guides.
+    expect(await Service.exists({ _id: dar._id, hidden: false })).toBeNull();
+    expect(await Service.distinct('_id', { hidden: false })).toEqual([]);
+    expect(await Service.countDocuments({ hidden: false })).toBe(0);
+    // Une requête qui précise hiddenByAdmin n'est pas modifiée.
+    expect(await Service.countDocuments({ hidden: false, hiddenByAdmin: true })).toBe(1);
+  });
+
+  it('l’administration le compte et le filtre comme non public', async () => {
+    const stats = await get('/api/admin/stats');
+    expect(stats.body.services).toEqual({ total: 2, hidden: 2, hiddenByAdmin: 1 });
+
+    const names = async (query) =>
+      (await get(`/api/admin/services?${query}`)).body.items.map((s) => s.name).sort();
+    expect(await names('hidden=true')).toEqual(['Dar Yasmine', 'Kayak']);
+    expect(await names('hidden=false')).toEqual([]);
+    expect(await names('hidden=true&search=dar')).toEqual(['Dar Yasmine']);
   });
 });
 

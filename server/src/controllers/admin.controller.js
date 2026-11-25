@@ -1,4 +1,13 @@
-import { Destination, Favorite, Offer, Review, Service, TripShare, User } from '../models/index.js';
+import {
+  Destination,
+  Favorite,
+  NOT_PUBLIC_FILTER,
+  Offer,
+  Review,
+  Service,
+  TripShare,
+  User,
+} from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { paginate } from '../utils/pagination.js';
 import { escapeRegex } from '../utils/text.js';
@@ -34,19 +43,28 @@ function assertManageable(req, target, action) {
  * et (US7.2) nombre d'avis, de partages de voyage actifs et de services (dont masqués).
  */
 export async function getStats(_req, res) {
-  const [byRole, suspended, pendingProviders, reviews, tripShares, services, hiddenServices] =
-    await Promise.all([
-      User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]),
-      User.countDocuments({ status: 'suspendu' }),
-      User.countDocuments({
-        role: 'prestataire',
-        'provider.approval': approvalQuery('en_attente'),
-      }),
-      Review.countDocuments(),
-      TripShare.countDocuments({ expiresAt: { $gt: new Date() } }),
-      Service.countDocuments(),
-      Service.countDocuments({ hidden: true }),
-    ]);
+  const [
+    byRole,
+    suspended,
+    pendingProviders,
+    reviews,
+    tripShares,
+    services,
+    hiddenServices,
+    hiddenByAdmin,
+  ] = await Promise.all([
+    User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]),
+    User.countDocuments({ status: 'suspendu' }),
+    User.countDocuments({
+      role: 'prestataire',
+      'provider.approval': approvalQuery('en_attente'),
+    }),
+    Review.countDocuments(),
+    TripShare.countDocuments({ expiresAt: { $gt: new Date() } }),
+    Service.countDocuments(),
+    Service.countDocuments(NOT_PUBLIC_FILTER),
+    Service.countDocuments({ hiddenByAdmin: true }),
+  ]);
 
   const users = { voyageur: 0, prestataire: 0, admin: 0 };
   for (const { _id, count } of byRole) users[_id] = count;
@@ -57,7 +75,8 @@ export async function getStats(_req, res) {
     pendingProviders,
     reviews,
     tripShares,
-    services: { total: services, hidden: hiddenServices },
+    // hidden : services non publics (masqués par le prestataire ou par l'administrateur).
+    services: { total: services, hidden: hiddenServices, hiddenByAdmin },
   });
 }
 
@@ -179,7 +198,7 @@ export async function listReviews(req, res) {
     sort: { createdAt: -1, _id: -1 },
     populate: [
       { path: 'author', select: 'name email' },
-      { path: 'service', select: 'name type hidden' },
+      { path: 'service', select: 'name type hidden hiddenByAdmin' },
     ],
   });
   res.json(result);
@@ -203,21 +222,29 @@ async function findService(req) {
 /**
  * GET /api/admin/services?search=&type=&hidden=&page=&limit= : tous les services (masqués compris),
  * plus récents d'abord. La recherche porte sur le nom du service et sur le prestataire.
+ * hidden=true : services non publics (masqués par le prestataire ou par l'administrateur) ;
+ * hidden=false : services publics.
  */
 export async function listAdminServices(req, res) {
   const { search, type, hidden, page, limit } = req.validated.query;
   const filter = {};
+  const conditions = [];
   if (type) filter.type = type;
-  if (hidden !== undefined) filter.hidden = hidden;
+  if (hidden === true) conditions.push(NOT_PUBLIC_FILTER);
+  if (hidden === false) Object.assign(filter, { hidden: false, hiddenByAdmin: { $ne: true } });
   if (search) {
     const pattern = searchPattern(search);
-    filter.$or = [{ name: pattern }, { provider: { $in: await matchingUserIds(pattern) } }];
+    conditions.push({
+      $or: [{ name: pattern }, { provider: { $in: await matchingUserIds(pattern) } }],
+    });
   }
+  if (conditions.length > 0) filter.$and = conditions;
   const result = await paginate(Service, filter, {
     page,
     limit,
     sort: { createdAt: -1, _id: -1 },
-    select: 'type name destination provider hidden ratingAverage ratingCount createdAt',
+    select:
+      'type name destination provider hidden hiddenByAdmin ratingAverage ratingCount createdAt',
     populate: [
       { path: 'destination', select: 'name slug' },
       { path: 'provider', select: 'name email provider.businessName' },
@@ -226,10 +253,14 @@ export async function listAdminServices(req, res) {
   res.json(result);
 }
 
-/** PATCH /api/admin/services/:id/visibilite { hidden } : masque ou réaffiche un service. */
+/**
+ * PATCH /api/admin/services/:id/visibilite { hidden } : masque ou réaffiche un service par la
+ * modération (hiddenByAdmin). Le choix du prestataire (hidden) n'est pas modifié : un service
+ * qu'il avait lui-même masqué reste masqué après la levée de la modération.
+ */
 export async function setAdminServiceVisibility(req, res) {
   const service = await findService(req);
-  service.hidden = req.validated.body.hidden;
+  service.hiddenByAdmin = req.validated.body.hidden;
   await service.save();
   await service.populate([
     { path: 'destination', select: 'name slug' },

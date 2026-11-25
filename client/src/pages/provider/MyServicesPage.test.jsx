@@ -187,6 +187,31 @@ describe('MyServicesPage — masquer / afficher', () => {
   })
 })
 
+describe('MyServicesPage — service masqué par la modération (US7.2)', () => {
+  it('affiche « Masqué par la modération » sans bouton pour le réafficher', async () => {
+    const moderated = { ...JASMIN, hiddenByAdmin: true }
+    mockApi({ 'GET /provider/services': () => jsonResponse(page([moderated, FELOUQUE])) })
+    renderPage()
+
+    const list = await screen.findByRole('list')
+    const [jasmin, felouque] = within(list).getAllByRole('listitem')
+    expect(within(jasmin).getByText('Masqué par la modération')).toBeInTheDocument()
+    expect(within(jasmin).getByText('Seul l’administrateur peut le réafficher.')).toBeInTheDocument()
+    expect(
+      within(jasmin).queryByRole('button', { name: /Afficher|Masquer/ }),
+    ).not.toBeInTheDocument()
+    // La carte mène à la modification, pas à une fiche publique introuvable.
+    expect(within(jasmin).getByRole('link', { name: 'Le Jasmin Bleu' })).toHaveAttribute(
+      'href',
+      '/prestataire/services/s1/modifier',
+    )
+    expect(within(felouque).queryByText('Masqué par la modération')).not.toBeInTheDocument()
+    expect(
+      within(felouque).getByRole('button', { name: 'Afficher « Balade en felouque »' }),
+    ).toBeInTheDocument()
+  })
+})
+
 describe('MyServicesPage — suppression', () => {
   it('ouvre une boîte de confirmation accessible, fermée par Échap sans rien supprimer', async () => {
     const user = userEvent.setup()

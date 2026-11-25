@@ -202,3 +202,17 @@
   padding-top: var(--space-3);
   border-top: 1px solid var(--trait);
 }
+
+/* US7.2 : service masqué par l'administrateur (espace prestataire). */
+.service-card__moderation {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--danger-pale);
+  color: var(--danger);
+  font-weight: 600;
+}

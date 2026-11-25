@@ -76,7 +76,7 @@ describe('US7.1 — GET /api/admin/stats', () => {
       // US7.2 : compteurs de contenus (aucun ici).
       reviews: 0,
       tripShares: 0,
-      services: { total: 0, hidden: 0 },
+      services: { total: 0, hidden: 0, hiddenByAdmin: 0 },
     });
   });
 });

@@ -154,7 +154,7 @@ describe('AdminModerationPage — services et partages (US7.2)', () => {
       {
         'PATCH /admin/services/s1/visibilite': (body) => {
           sent.push(body)
-          return jsonResponse({ service: { ...SERVICES[0], hidden: body.hidden } })
+          return jsonResponse({ service: { ...SERVICES[0], hiddenByAdmin: body.hidden } })
         },
       },
       '/admin/moderation?onglet=services',
@@ -166,13 +166,43 @@ describe('AdminModerationPage — services et partages (US7.2)', () => {
     await user.click(
       screen.getByRole('button', { name: 'Masquer « La Maison aux Volets Bleus »' }),
     )
-    expect(await screen.findByText(/est masqué/)).toBeInTheDocument()
-    expect(within(table).getByText('Masqué')).toBeInTheDocument()
+    expect(await screen.findByText(/est masqué par la modération/)).toBeInTheDocument()
+    expect(within(table).getByText('Masqué par la modération')).toBeInTheDocument()
 
     await user.click(
       screen.getByRole('button', { name: 'Réafficher « La Maison aux Volets Bleus »' }),
     )
     expect(await screen.findByText(/est de nouveau visible/)).toBeInTheDocument()
+    expect(sent).toEqual([{ hidden: true }, { hidden: false }])
+  })
+
+  it('distingue un service masqué par son prestataire, sans toucher à son choix', async () => {
+    const user = userEvent.setup()
+    const providerHidden = { ...SERVICES[0], hidden: true, hiddenByAdmin: false }
+    const sent = []
+    renderPage(
+      {
+        'GET /admin/services': () => page([providerHidden]),
+        'PATCH /admin/services/s1/visibilite': (body) => {
+          sent.push(body)
+          return jsonResponse({ service: { ...providerHidden, hiddenByAdmin: body.hidden } })
+        },
+      },
+      '/admin/moderation?onglet=services',
+    )
+    const table = await screen.findByRole('table')
+    expect(within(table).getByText('Masqué par le prestataire')).toBeInTheDocument()
+    // Pas de lien vers une fiche qui n'est pas publique.
+    expect(within(table).queryByRole('link')).not.toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Masquer « La Maison aux Volets Bleus »' }),
+    )
+    expect(await screen.findByText(/est masqué par la modération/)).toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: 'Réafficher « La Maison aux Volets Bleus »' }),
+    )
+    expect(await screen.findByText(/il reste masqué par son prestataire/)).toBeInTheDocument()
     expect(sent).toEqual([{ hidden: true }, { hidden: false }])
   })
 

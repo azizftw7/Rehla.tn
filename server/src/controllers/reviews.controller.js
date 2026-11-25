@@ -145,7 +145,12 @@ const NO_REPLY_FILTER = { 'providerReply.text': { $in: [null, ''] } };
 function toProviderReview(review, service) {
   return {
     ...toPublicReview(review),
-    service: { _id: service._id, name: service.name, hidden: service.hidden },
+    // hidden : le service n'est pas public (masqué par le prestataire ou par la modération).
+    service: {
+      _id: service._id,
+      name: service.name,
+      hidden: Boolean(service.hidden || service.hiddenByAdmin),
+    },
   };
 }
 
@@ -158,7 +163,9 @@ async function findReceivedReview(req) {
   if (!review) {
     throw ApiError.notFound('Avis introuvable.');
   }
-  const service = await Service.findById(review.service).select('provider name hidden');
+  const service = await Service.findById(review.service).select(
+    'provider name hidden hiddenByAdmin',
+  );
   if (!service?.provider.equals(req.user._id)) {
     throw ApiError.forbidden('Vous ne pouvez répondre qu’aux avis laissés sur vos services.');
   }
@@ -181,7 +188,9 @@ async function saveReply(review, service, reply) {
 export async function listReceivedReviews(req, res) {
   const { service, unanswered, page, limit } = req.validated.query;
 
-  const services = await Service.find({ provider: req.user._id }).select('name hidden');
+  const services = await Service.find({ provider: req.user._id }).select(
+    'name hidden hiddenByAdmin',
+  );
   const ownIds = services.map((s) => s._id);
   if (service && !ownIds.some((id) => id.equals(service))) {
     throw ApiError.notFound('Service introuvable.');

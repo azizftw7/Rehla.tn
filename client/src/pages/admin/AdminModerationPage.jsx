@@ -74,6 +74,9 @@ const formatStayDates = (share) =>
     ? `Du ${formatDay(share.startDate)} au ${formatDay(share.endDate)}`
     : '—'
 
+/** Le service est-il visible des voyageurs ? (ni masqué par son prestataire, ni par la modération) */
+const isPublic = (service) => !service?.hidden && !service?.hiddenByAdmin
+
 const categoryLabel = (type) => CATEGORIES.find((cat) => cat.type === type)?.label ?? type
 
 /** Texte de la boîte de confirmation selon le contenu à supprimer. */
@@ -187,9 +190,9 @@ export default function AdminModerationPage() {
     setNotice(null)
     setActionError(null)
     try {
-      const { service: updated } = await setAdminServiceHidden(service._id, !service.hidden)
-      const stays =
-        visibility === 'tous' || (visibility === 'masques') === Boolean(updated.hidden)
+      // L'administrateur ne change que la modération (hiddenByAdmin), jamais le choix du prestataire.
+      const { service: updated } = await setAdminServiceHidden(service._id, !service.hiddenByAdmin)
+      const stays = visibility === 'tous' || (visibility === 'masques') === !isPublic(updated)
       setState((prev) => ({
         ...prev,
         data: {
@@ -202,9 +205,11 @@ export default function AdminModerationPage() {
       }))
       if (!stays) focusTitleRef.current = true
       setNotice(
-        updated.hidden
-          ? `« ${updated.name} » est masqué : les voyageurs ne le voient plus.`
-          : `« ${updated.name} » est de nouveau visible.`,
+        updated.hiddenByAdmin
+          ? `« ${updated.name} » est masqué par la modération : les voyageurs ne le voient plus et son prestataire ne peut pas le réafficher.`
+          : updated.hidden
+            ? `La modération de « ${updated.name} » est levée ; il reste masqué par son prestataire.`
+            : `« ${updated.name} » est de nouveau visible.`,
       )
     } catch (err) {
       setActionError(err.message)
@@ -263,7 +268,7 @@ export default function AdminModerationPage() {
         </span>
       </td>
       <td role="cell" data-label="Service">
-        {review.service && !review.service.hidden ? (
+        {review.service && isPublic(review.service) ? (
           <Link to={`/services/${review.service._id}`}>{review.service.name}</Link>
         ) : (
           review.service?.name || '—'
@@ -286,7 +291,7 @@ export default function AdminModerationPage() {
     return (
       <tr key={service._id} role="row" className="admin-table__row">
         <th scope="row" role="rowheader" className="admin-table__name">
-          {service.hidden ? (
+          {!isPublic(service) ? (
             service.name
           ) : (
             <Link to={`/services/${service._id}`}>{service.name}</Link>
@@ -305,8 +310,10 @@ export default function AdminModerationPage() {
           {service.destination?.name || '—'}
         </td>
         <td role="cell" data-label="Statut">
-          {service.hidden ? (
-            <span className="admin-badge admin-badge--attente">Masqué</span>
+          {service.hiddenByAdmin ? (
+            <span className="admin-badge admin-badge--refuse">Masqué par la modération</span>
+          ) : service.hidden ? (
+            <span className="admin-badge admin-badge--attente">Masqué par le prestataire</span>
           ) : (
             <span className="admin-badge admin-badge--actif">Visible</span>
           )}
@@ -315,14 +322,14 @@ export default function AdminModerationPage() {
           <div className="admin-actions">
             <Button
               type="button"
-              variant={service.hidden ? 'secondary' : 'ghost'}
+              variant={service.hiddenByAdmin ? 'secondary' : 'ghost'}
               size="sm"
-              icon={service.hidden ? Eye : EyeOff}
+              icon={service.hiddenByAdmin ? Eye : EyeOff}
               disabled={busy}
-              aria-label={`${service.hidden ? 'Réafficher' : 'Masquer'} « ${service.name} »`}
+              aria-label={`${service.hiddenByAdmin ? 'Réafficher' : 'Masquer'} « ${service.name} »`}
               onClick={() => toggleHidden(service)}
             >
-              {service.hidden ? 'Réafficher' : 'Masquer'}
+              {service.hiddenByAdmin ? 'Réafficher' : 'Masquer'}
             </Button>
             {deleteButton(service, `« ${service.name} »`)}
           </div>

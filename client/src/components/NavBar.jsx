@@ -16,6 +16,8 @@ const NAV_LINKS = [
   { to: '/partage', label: 'Partage de voyage' },
 ]
 const BECOME_PROVIDER_LINK = { to: '/inscription?role=prestataire', label: 'Devenir prestataire' }
+// US5.1 : réservé aux voyageurs connectés.
+const FAVORITES_LINK = { to: '/mes-favoris', label: 'Mes favoris' }
 
 /** Nombre de demandes prestataire en attente (admin uniquement), mis à jour après chaque action. */
 function usePendingProviders(isAdmin) {
@@ -48,9 +50,11 @@ export default function NavBar() {
   const location = useLocation()
   const burgerRef = useRef(null)
   const pendingProviders = usePendingProviders(user?.role === 'admin')
-  const links = canBecomeProvider({ user, loading: sessionLoading })
-    ? [...NAV_LINKS, BECOME_PROVIDER_LINK]
-    : NAV_LINKS
+  const links = [
+    ...NAV_LINKS,
+    ...(user?.role === 'voyageur' ? [FAVORITES_LINK] : []),
+    ...(canBecomeProvider({ user, loading: sessionLoading }) ? [BECOME_PROVIDER_LINK] : []),
+  ]
   const providerState = user?.provider?.approval === 'refuse' ? 'Refusé' : 'En attente'
 
   // Le menu mobile est lié à la page où il a été ouvert : il se ferme seul au changement de page.

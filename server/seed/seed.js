@@ -81,6 +81,13 @@ async function seed() {
     });
   }
 
+  await Favorite.create(
+    data.favorites.map((favorite) => ({
+      user: pick(users, favorite.user, 'utilisateur')._id,
+      service: pick(services, favorite.service, 'service')._id,
+    })),
+  );
+
   await Transport.create(
     data.transports.map((transport) => ({
       ...transport,
@@ -94,6 +101,7 @@ async function seed() {
       `- ${users.size} comptes (mot de passe : valeur de SEED_DEMO_PASSWORD)`,
       `- ${destinations.size} destinations`,
       `- ${services.size} services, ${data.offers.length} offres, ${data.reviews.length} avis`,
+      `- ${data.favorites.length} favoris`,
       `- ${data.transports.length} transports`,
       '',
       'Comptes de démo :',

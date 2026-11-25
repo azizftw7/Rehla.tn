@@ -16,6 +16,7 @@ import {
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
+import FavoriteButton from '../../components/FavoriteButton.jsx'
 import Icon from '../../components/Icon.jsx'
 import { getAccommodationLabel } from '../../data/accommodationTypes.js'
 import { CATEGORIES } from '../../data/categories.js'
@@ -326,6 +327,7 @@ export default function ServiceDetailPage() {
               <h1 id="service-detail-titre" className="titre-1">
                 {service.name}
               </h1>
+              <FavoriteButton serviceId={service._id} serviceName={service.name} variant="detail" />
 
               <div className="service-detail__meta texte-s">
                 {service.destination?.name && (

@@ -13,6 +13,7 @@ import DestinationPage from './pages/destinations/DestinationPage.jsx'
 import DestinationsPage from './pages/destinations/DestinationsPage.jsx'
 import HomePage from './pages/home/HomePage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
+import FavoritesPage from './pages/favorites/FavoritesPage.jsx'
 import EditServicePage from './pages/provider/EditServicePage.jsx'
 import MyServicesPage from './pages/provider/MyServicesPage.jsx'
 import NewServicePage from './pages/provider/NewServicePage.jsx'
@@ -37,6 +38,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ChangePasswordPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="mes-favoris"
+          element={
+            <ProtectedRoute roles={['voyageur']}>
+              <FavoritesPage />
             </ProtectedRoute>
           }
         />

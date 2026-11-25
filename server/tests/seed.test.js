@@ -76,6 +76,10 @@ describe('npm run seed', () => {
     });
     expect(activeLodgingOffer).not.toBeNull();
 
+    // US5.1 : la voyageuse de démo voyageur1 a des favoris.
+    const amel = await db.collection('users').findOne({ email: 'voyageur1@demo.rehla.tn' });
+    expect(await db.collection('favorites').countDocuments({ user: amel._id })).toBe(4);
+
     const admin = await db.collection('users').findOne({ role: 'admin' });
     expect(admin.password).toMatch(/^\$2[aby]\$/);
 

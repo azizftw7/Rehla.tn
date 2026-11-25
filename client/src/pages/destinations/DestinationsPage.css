@@ -74,6 +74,11 @@
   height: 40px;
 }
 
+/* Types choisis sur l'accueil (US2.3) : sous la recherche. */
+.destinations-page__types {
+  margin-bottom: 0;
+}
+
 /* ---------- Liste compacte des destinations trouvées ---------- */
 
 .destinations-page__found {

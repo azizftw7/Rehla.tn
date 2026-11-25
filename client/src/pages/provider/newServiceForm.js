@@ -1,17 +1,12 @@
 // Outils du formulaire de service (ServiceForm) : publication (US6.1) et modification (US6.2).
 
+import { ACTIVITY_CATEGORIES } from '../../data/activityCategories.js'
+
 export const MAX_PHOTOS = 5
 export const MAX_PHOTO_SIZE = 5 * 1024 * 1024
 export const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-export const ACTIVITY_CATEGORY_SUGGESTIONS = [
-  'Plage',
-  'Site historique',
-  'Sports nautiques',
-  'Désert',
-  'Culture et artisanat',
-  'Randonnée',
-]
+export const ACTIVITY_CATEGORY_SUGGESTIONS = ACTIVITY_CATEGORIES
 
 // Unités de prix proposées selon le type (saisie libre possible).
 export const PRICE_UNITS = {

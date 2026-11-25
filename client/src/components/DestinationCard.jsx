@@ -4,8 +4,11 @@ import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import './DestinationCard.css'
 
-/** Carte d'une destination (réponse de GET /api/destinations). Toute la carte est cliquable. */
-export default function DestinationCard({ destination }) {
+/**
+ * Carte d'une destination (réponse de GET /api/destinations). Toute la carte est cliquable.
+ * linkQuery : paramètres ajoutés au lien (ex. « ?types=hebergement » pour garder les filtres).
+ */
+export default function DestinationCard({ destination, linkQuery = '' }) {
   const { name, slug, region, description, coverImage } = destination
   const [imageFailed, setImageFailed] = useState(false)
   const showImage = coverImage && !imageFailed
@@ -30,7 +33,7 @@ export default function DestinationCard({ destination }) {
       </div>
       <div className="destination-card__body">
         <h3 className="titre-4">
-          <Link to={`/destinations/${slug}`} className="destination-card__link">
+          <Link to={`/destinations/${slug}${linkQuery}`} className="destination-card__link">
             {name}
           </Link>
         </h3>

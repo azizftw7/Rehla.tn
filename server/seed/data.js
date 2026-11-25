@@ -396,6 +396,8 @@ export const reviews = [
 
 // Horaires et tarifs indicatifs pour la démo : ils ne proviennent pas des opérateurs.
 const DEMO_SOURCE = 'Données de démonstration (à vérifier auprès des opérateurs)';
+// Date à laquelle ces données indicatives ont été relevées (et non la date d'exécution du seed).
+export const DEMO_SOURCE_UPDATED_AT = new Date('2026-10-01T00:00:00.000Z');
 
 export const transports = [
   {
@@ -458,4 +460,8 @@ export const transports = [
     schedule: 'Toutes les 15 à 20 minutes, de 4h à minuit',
     operator: 'Train de banlieue nord (démo)',
   },
-].map((transport) => ({ ...transport, source: DEMO_SOURCE }));
+].map((transport) => ({
+  ...transport,
+  source: DEMO_SOURCE,
+  sourceUpdatedAt: DEMO_SOURCE_UPDATED_AT,
+}));

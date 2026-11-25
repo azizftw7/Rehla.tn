@@ -1,7 +1,8 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../src/app.js';
-import { Destination } from '../src/models/index.js';
+import { Destination, Service, Transport } from '../src/models/index.js';
+import { createUser } from './helpers.js';
 
 const point = (lng, lat) => ({ type: 'Point', coordinates: [lng, lat] });
 
@@ -117,5 +118,53 @@ describe('US2.1 — GET /api/destinations/:slug', () => {
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ message: 'Destination introuvable.', details: [] });
+  });
+});
+
+describe('US2.3 — GET /api/destinations?types= (recherche de l’accueil)', () => {
+  beforeEach(async () => {
+    const [djerba, tozeur, sidiBouSaid] = await Promise.all(
+      ['djerba', 'tozeur', 'sidi-bou-said'].map((slug) => Destination.findOne({ slug })),
+    );
+    const provider = await createUser({ role: 'prestataire' });
+    const base = { provider: provider._id, location: point(10, 34), free: true };
+
+    await Service.create([
+      { ...base, type: 'hebergement', name: 'Dar Djerba', destination: djerba._id },
+      { ...base, type: 'guide', name: 'Guide de Tozeur', destination: tozeur._id },
+      // Un service masqué ne compte pas.
+      {
+        ...base,
+        type: 'restaurant',
+        name: 'Masqué',
+        destination: sidiBouSaid._id,
+        hidden: true,
+      },
+    ]);
+    await Transport.create({ type: 'ferry', from: 'Jorf', to: 'Ajim', destination: djerba._id });
+  });
+
+  it('ne garde que les destinations qui proposent un des types demandés', async () => {
+    const res = await search({ types: 'hebergement,guide' });
+
+    expect(res.status).toBe(200);
+    expect(names(res)).toEqual(['Djerba', 'Tozeur']);
+    expect(res.body.total).toBe(2);
+  });
+
+  it('tient compte des transports et des services masqués', async () => {
+    expect(names(await search({ types: 'transport' }))).toEqual(['Djerba']);
+    expect(names(await search({ types: 'restaurant' }))).toEqual([]);
+  });
+
+  it('se combine avec la recherche par nom', async () => {
+    expect(names(await search({ search: 'toz', types: 'hebergement,guide' }))).toEqual(['Tozeur']);
+  });
+
+  it('refuse un type inconnu (400)', async () => {
+    const res = await search({ types: 'guide,plongee' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details[0].field).toBe('types');
   });
 });

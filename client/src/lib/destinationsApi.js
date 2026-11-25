@@ -1,9 +1,14 @@
 import { apiGet } from './api.js'
 
 /** GET /api/destinations?search=&page=&limit= → { items, total, page, pages } */
-export function fetchDestinations({ search, page, limit } = {}, options = {}) {
+/**
+ * GET /api/destinations?search=&types=&page=&limit=
+ * types : tableau de types (« hebergement », « transport »…) : destinations qui en proposent au moins un.
+ */
+export function fetchDestinations({ search, types, page, limit } = {}, options = {}) {
   const params = new URLSearchParams()
   if (search) params.set('search', search)
+  if (types?.length) params.set('types', types.join(','))
   if (page) params.set('page', String(page))
   if (limit) params.set('limit', String(limit))
   const query = params.toString()

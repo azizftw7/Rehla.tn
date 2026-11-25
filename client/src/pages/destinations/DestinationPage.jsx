@@ -1,13 +1,21 @@
 import { ArrowLeft, MapPin } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button.jsx'
 import '../../components/DestinationCard.css'
 import Icon from '../../components/Icon.jsx'
+import MapFilters from '../../components/MapFilters.jsx'
 import TransportCard from '../../components/TransportCard.jsx'
 import { CATEGORIES } from '../../data/categories.js'
 import { TRANSPORT_TYPE_MAP, TRANSPORT_TYPES } from '../../data/transportTypes.js'
 import { fetchDestinationBySlug, toLatLng } from '../../lib/destinationsApi.js'
+import {
+  countActiveFilters,
+  EMPTY_FILTERS,
+  parseMapFilters,
+  toApiParams,
+  toSearchParams,
+} from '../../lib/mapFilters.js'
 import { fetchServices, formatServicePrice } from '../../lib/servicesApi.js'
 import { fetchTransports } from '../../lib/transportsApi.js'
 import '../services/ServicesPage.css'
@@ -131,9 +139,12 @@ function TransportsPanel({ state, loading, mode, destinationName, onSelectMode, 
 export default function DestinationPage() {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
-  const type = searchParams.get('type') || ''
+  // Filtres de la carte, lus dans l'URL (US2.3).
+  const filters = useMemo(() => parseMapFilters(searchParams), [searchParams])
+  // Requête de l'API sous forme de texte : l'effet ne se relance que si elle change.
+  const apiQuery = new URLSearchParams(toApiParams(filters)).toString()
   // Onglet « Transports » (US4.1) : la liste affiche les transports à la place des services.
-  const isTransport = type === 'transport'
+  const isTransport = filters.transport
   const rawMode = isTransport ? searchParams.get('mode') || '' : ''
   const transportMode = TRANSPORT_TYPE_MAP[rawMode] ? rawMode : ''
   const mapRef = useRef(null)
@@ -153,7 +164,7 @@ export default function DestinationPage() {
   const [transportsState, setTransportsState] = useState({ key: null, items: [], error: null })
 
   const destinationKey = `${slug}|${destinationReload}`
-  const servicesKey = `${slug}|${type}|${servicesReload}`
+  const servicesKey = `${slug}|${apiQuery}|${servicesReload}`
   const transportsKey = `${slug}|${transportMode}|${transportsReload}`
 
   useEffect(() => {
@@ -172,14 +183,18 @@ export default function DestinationPage() {
   useEffect(() => {
     if (isTransport) return undefined
     const controller = new AbortController()
-    fetchServices({ destination: slug, type, limit: SERVICES_LIMIT }, { signal: controller.signal })
+    const params = Object.fromEntries(new URLSearchParams(apiQuery))
+    fetchServices(
+      { destination: slug, ...params, limit: SERVICES_LIMIT },
+      { signal: controller.signal },
+    )
       .then((res) => setServicesState({ key: servicesKey, items: res.items || [], error: null }))
       .catch((err) => {
         if (err.name === 'AbortError') return
         setServicesState({ key: servicesKey, items: [], error: err.message })
       })
     return () => controller.abort()
-  }, [slug, type, isTransport, servicesKey])
+  }, [slug, apiQuery, isTransport, servicesKey])
 
   useEffect(() => {
     if (!isTransport) return undefined
@@ -203,18 +218,22 @@ export default function DestinationPage() {
   const transportsLoading = transportsState.key !== transportsKey
   const { destination, error: destinationError } = destinationState
   // La sélection ne vaut que pour la liste affichée (elle s'efface quand on change d'onglet).
-  const selectedId = selected.key === `${slug}|${type}` ? selected.id : null
+  const selectedId = selected.key === `${slug}|${apiQuery}` ? selected.id : null
 
-  const selectType = (nextType) => {
-    setSearchParams(nextType ? { type: nextType } : {})
+  // L'URL garde les filtres (lien partageable, rechargement) sans empiler l'historique à chaque
+  // réglage ; la carte se recadre d'elle-même sur les nouveaux résultats (ServicesMap).
+  const changeFilters = (nextFilters) => {
+    setSearchParams(toSearchParams(nextFilters), { replace: true })
   }
 
+  const clearFilters = () => changeFilters({ ...EMPTY_FILTERS, types: filters.types })
+
   const selectTransportMode = (nextMode) => {
-    setSearchParams(nextMode ? { type: 'transport', mode: nextMode } : { type: 'transport' })
+    setSearchParams(toSearchParams({ ...EMPTY_FILTERS, transport: true }, { mode: nextMode }))
   }
 
   const selectService = (id) => {
-    setSelected({ key: `${slug}|${type}`, id })
+    setSelected({ key: `${slug}|${apiQuery}`, id })
   }
 
   const showOnMap = (id) => {
@@ -281,7 +300,8 @@ export default function DestinationPage() {
   }
 
   const center = toLatLng(destination.location) || TUNISIA_CENTER
-  const activeCategory = CATEGORY_MAP[type]
+  const activeCategory = filters.types.length === 1 ? CATEGORY_MAP[filters.types[0]] : null
+  const activeFilters = countActiveFilters(filters)
   // Onglet Transports : aucun marqueur, la carte reste centrée sur la destination.
   const services = isTransport || servicesLoading ? NO_SERVICES : servicesState.items
   const total = services.length
@@ -306,29 +326,7 @@ export default function DestinationPage() {
           )}
         </header>
 
-        <div className="services-page__tabs" role="group" aria-label="Filtrer par catégorie">
-          <button
-            type="button"
-            className="services-page__tab label"
-            aria-pressed={type === ''}
-            onClick={() => selectType('')}
-          >
-            Tous
-          </button>
-          {CATEGORIES.map((category) => (
-            <button
-              key={category.type}
-              type="button"
-              className="services-page__tab label"
-              style={{ '--tab-accent': `var(${category.color})` }}
-              aria-pressed={type === category.type}
-              onClick={() => selectType(category.type)}
-            >
-              <Icon icon={category.icon} size={16} />
-              {category.title}
-            </button>
-          ))}
-        </div>
+        <MapFilters filters={filters} onChange={changeFilters} />
 
         <div className="destination-page__layout">
           <div ref={mapRef} className="destination-page__map">
@@ -365,6 +363,10 @@ export default function DestinationPage() {
                     ? 'Chargement des adresses…'
                     : `${total} adresse${total > 1 ? 's' : ''}${
                         activeCategory ? ` · ${activeCategory.title}` : ''
+                      }${
+                        activeFilters > 0
+                          ? ` · ${activeFilters} filtre${activeFilters > 1 ? 's' : ''}`
+                          : ''
                       }`}
                 </p>
 
@@ -384,11 +386,25 @@ export default function DestinationPage() {
                   </div>
                 ) : servicesLoading ? (
                   <ListSkeleton />
+                ) : total === 0 && activeFilters > 0 ? (
+                  <div className="destination-page__state">
+                    <h2 className="titre-4">Aucun service ne correspond à ces filtres.</h2>
+                    <p className="texte-s" style={{ color: 'var(--encre-2)' }}>
+                      Élargissez le prix, la note ou la période pour voir plus d’adresses.
+                    </p>
+                    <Button type="button" variant="secondary" onClick={clearFilters}>
+                      Effacer les filtres
+                    </Button>
+                  </div>
                 ) : total === 0 ? (
                   <div className="destination-page__state">
                     <h2 className="titre-4">Aucun service dans cette catégorie pour le moment.</h2>
-                    {type && (
-                      <Button type="button" variant="secondary" onClick={() => selectType('')}>
+                    {filters.types.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => changeFilters(EMPTY_FILTERS)}
+                      >
                         Voir tous les services
                       </Button>
                     )}

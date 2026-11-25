@@ -21,7 +21,8 @@ export default function Hero() {
       types.includes(type) ? types.filter((t) => t !== type) : [...types, type],
     )
 
-  // Résultats sur /destinations (le paramètre types est réservé à un filtre ultérieur).
+  // Résultats sur /destinations : « types » ne garde que les destinations qui proposent ces
+  // services, puis la carte de la destination s'ouvre déjà filtrée (US2.3).
   const search = (text) => {
     const params = new URLSearchParams()
     if (text) params.set('search', text)

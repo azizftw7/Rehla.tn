@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import { jsonResponse } from '../../test/utils.jsx'
+import { jsonResponse, LocationDisplay } from '../../test/utils.jsx'
 import DestinationPage from './DestinationPage.jsx'
 
 // Leaflet ne fonctionne pas dans jsdom : la carte est remplacée par un composant qui expose ses props.
@@ -98,7 +98,15 @@ function renderPage(route = '/destinations/sidi-bou-said') {
   return render(
     <MemoryRouter initialEntries={[route]}>
       <Routes>
-        <Route path="/destinations/:slug" element={<DestinationPage />} />
+        <Route
+          path="/destinations/:slug"
+          element={
+            <>
+              <DestinationPage />
+              <LocationDisplay />
+            </>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -154,7 +162,7 @@ describe('DestinationPage', () => {
 
     expect(tab).toHaveAttribute('aria-pressed', 'true')
     expect(fetchMock).toHaveBeenLastCalledWith(
-      expect.stringContaining('type=restaurant'),
+      expect.stringContaining('types=restaurant'),
       expect.any(Object),
     )
     expect(await screen.findByText('1 adresse · Restaurants')).toBeInTheDocument()
@@ -316,6 +324,115 @@ describe('DestinationPage', () => {
       expect(
         await screen.findByRole('list', { name: 'Transports pour rejoindre Sidi Bou Saïd' }),
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('filtres multicritères (US2.3)', () => {
+    const lastServicesUrl = (fetchMock) =>
+      fetchMock.mock.calls.map(([url]) => url).filter((url) => url.includes('/services?')).at(-1)
+
+    it('sélectionne plusieurs catégories à la fois et les garde dans l’URL', async () => {
+      const user = userEvent.setup()
+      const fetchMock = mockApi({ services: [page(SERVICES), page([SERVICES[0]]), page(SERVICES)] })
+      renderPage()
+      await screen.findByRole('list', { name: 'Services de la destination' })
+
+      const group = screen.getByRole('group', { name: 'Filtrer par catégorie' })
+      await user.click(within(group).getByRole('button', { name: 'Hébergements' }))
+      await user.click(within(group).getByRole('button', { name: 'Restaurants' }))
+
+      expect(within(group).getByRole('button', { name: 'Hébergements' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(within(group).getByRole('button', { name: 'Restaurants' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(within(group).getByRole('button', { name: 'Tous' })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      )
+      expect(lastServicesUrl(fetchMock)).toContain('types=hebergement%2Crestaurant')
+      expect(screen.getByTestId('location')).toHaveTextContent(
+        '/destinations/sidi-bou-said?types=hebergement%2Crestaurant',
+      )
+      // La carte reçoit les résultats : elle se recadre sur eux.
+      expect(await screen.findByText('2 adresses')).toBeInTheDocument()
+      expect(screen.getByTestId('services-map')).toHaveAttribute('data-markers', 's1,s2')
+    })
+
+    it('applique les filtres avancés lus dans l’URL', async () => {
+      const fetchMock = mockApi({ services: [page([SERVICES[0]])] })
+      renderPage(
+        '/destinations/sidi-bou-said?types=hebergement&maxPrice=200&minRating=4&accommodationType=dar',
+      )
+
+      expect(await screen.findByText('1 adresse · Hébergements · 3 filtres')).toBeInTheDocument()
+      expect(lastServicesUrl(fetchMock)).toContain(
+        'types=hebergement&maxPrice=200&minRating=4&accommodationType=dar',
+      )
+      // Des filtres actifs : le panneau est ouvert et affiche les valeurs de l'URL.
+      const toggle = screen.getByRole('button', { name: /Filtres/ })
+      expect(toggle).toHaveAttribute('aria-expanded', 'true')
+      expect(toggle).toHaveTextContent('3 actifs')
+      expect(screen.getByLabelText('Prix')).toHaveValue('200')
+      expect(screen.getByLabelText('Note minimale')).toHaveValue('4')
+      expect(screen.getByLabelText('Type d’hébergement')).toHaveValue('dar')
+      // Filtres propres aux autres types : masqués quand seuls les hébergements sont affichés.
+      expect(screen.queryByLabelText('Catégorie d’activité')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Événements du')).not.toBeInTheDocument()
+    })
+
+    it('ouvre les filtres et envoie prix et note à l’API', async () => {
+      const user = userEvent.setup()
+      const fetchMock = mockApi({ services: [page(SERVICES), page(SERVICES), page([SERVICES[1]])] })
+      renderPage()
+      await screen.findByRole('list', { name: 'Services de la destination' })
+
+      const toggle = screen.getByRole('button', { name: /Filtres/ })
+      expect(toggle).toHaveAttribute('aria-expanded', 'false')
+      await user.click(toggle)
+      expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
+      await user.selectOptions(screen.getByLabelText('Prix'), 'Gratuit uniquement')
+      await user.selectOptions(screen.getByLabelText('Note minimale'), '4 étoiles et plus')
+
+      expect(lastServicesUrl(fetchMock)).toContain('free=true&minRating=4')
+      expect(screen.getByTestId('location')).toHaveTextContent('?free=true&minRating=4')
+      expect(await screen.findByText('1 adresse · 2 filtres')).toBeInTheDocument()
+    })
+
+    it('n’envoie pas une période incohérente et l’explique', async () => {
+      const fetchMock = mockApi({ services: [page([])] })
+      renderPage('/destinations/sidi-bou-said?types=evenement&from=2026-12-10&to=2026-12-01')
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'La date de fin doit être postérieure ou égale à la date de début.',
+      )
+      expect(screen.getByLabelText('au')).toHaveAttribute('aria-invalid', 'true')
+      expect(lastServicesUrl(fetchMock)).not.toContain('from=')
+    })
+
+    it('propose d’effacer les filtres quand rien ne correspond', async () => {
+      const user = userEvent.setup()
+      const fetchMock = mockApi({ services: [page([]), page([SERVICES[1]])] })
+      renderPage('/destinations/sidi-bou-said?types=restaurant&minRating=4.5')
+
+      expect(
+        await screen.findByRole('heading', { name: 'Aucun service ne correspond à ces filtres.' }),
+      ).toBeInTheDocument()
+      const state = screen
+        .getByRole('heading', { name: 'Aucun service ne correspond à ces filtres.' })
+        .closest('div')
+      await user.click(within(state).getByRole('button', { name: 'Effacer les filtres' }))
+
+      // Les catégories choisies restent, seuls les filtres avancés sont effacés.
+      expect(screen.getByTestId('location')).toHaveTextContent(
+        '/destinations/sidi-bou-said?types=restaurant',
+      )
+      expect(lastServicesUrl(fetchMock)).not.toContain('minRating')
+      expect(await screen.findByText('1 adresse · Restaurants')).toBeInTheDocument()
     })
   })
 })
